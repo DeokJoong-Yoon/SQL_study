@@ -431,12 +431,166 @@ WHERE
 -- <문제> 자신의 직속상관이 없는 직원의 전체 이름과 직원번호, 업무ID를 출려가하라
 -- SELECT * FROM EMPLOYEES;
 SELECT
-    first_name || ' ' || last_name 전체이름,
-    employee_ID 직원번호,
-    job_id 업무ID
+    first_name
+    || ' '
+    || last_name 전체이름,
+    employee_id  직원번호,
+    job_id       업무id
 FROM
     employees
 WHERE
-    MANAGER_ID IS NULL;
+    manager_id IS NULL;
     
 -- <문제> 커미션을 받는 사원만 출력하되 사원번호, 이름, 급여, 수당율, 수당금액(계산식 - 급여 * 수당율)을 출력하라.
+SELECT
+    employee_id,
+    first_name,
+    salary,
+    commission_pct,
+    salary * commission_pct commission
+FROM
+    employees
+WHERE
+    commission_pct IS NOT NULL;
+
+-- <예>사번을 기준으로 오름차순으로 정렬
+SELECT
+    employee_id,
+    first_name
+FROM
+    employees
+ORDER BY
+--    employee_id -- ORDER BY 의 default 값은 ASC
+    employee_id ASC;
+
+SELECT
+    employee_id,
+    first_name
+FROM
+    employees
+ORDER BY
+    employee_id DESC;
+    
+-- 자바 인덱스 : 0 ~
+-- 오라클의 인뎃스 번호 : 1 ~ 
+
+SELECT
+    employee_id,
+    first_name
+FROM
+    employees
+ORDER BY
+-- ORDER BY 컬럼명 ( 또는 순번)
+    1 DESC;
+
+-- NULL를 포함한 컬럼처리
+-- ASC : NULL 레코드를 제일 마지막 출력
+-- DESC : NULL 레코드를 제일 먼저 출력 
+SELECT
+    employee_id,
+    first_name,
+    department_id
+FROM
+    employees
+ORDER BY
+    department_id DESC;
+    
+-- <문제> 직원번호, 이름, 급여, 부서번호를 급여가 높은 순으로 출력하라.
+-- 같은 급여일 경우 직원번호 내림차순으로 출력
+SELECT
+    employee_id,
+    first_name,
+    salary,
+    department_id
+FROM
+    employees
+ORDER BY
+--    salary DESC, employee_id DESC;
+    3 DESC,
+    1 DESC;
+    
+-- <문제> 입사일이 가장 최근인 직원 순으로 직원번호, 이름, 입사일을 출력하라
+SELECT
+    employee_id,
+    first_name,
+    hire_date
+FROM
+    employees
+ORDER BY
+    hire_date DESC;
+    
+--<문제> 부서번호가 20, 50번 부서에서 근무하는 모든 사원들의 이름(FIRST_NAME), 부서 번호, 급여를
+--사원의 이름순(알파벳순)으로 출력하라.
+SELECT
+    first_name,
+    department_id,
+    salary
+FROM
+    employees
+WHERE
+--    department_id = 20 OR
+--    department_id = 50
+    department_id IN ( 20, 50 )
+ORDER BY
+    first_name;
+    
+--사원번호, 사원명, 급여 3개의 칼럼으로 구성된 emp01 테이블
+CREATE TABLE emp01 (
+    empno NUMBER(4),
+    ename VARCHAR(20),
+    sal   NUMBER(7, 2)
+);
+
+DESC emp01;
+-- 널필드는 널 허용 여부를 저장한다.
+
+SELECT
+    *
+FROM
+    tab;
+
+-- employee 테이블과 employee테이블의 모든 칼럼을 복사하여 employees02 테이블을 생성한다.
+CREATE TABLE employees02
+    AS
+        SELECT
+            *
+        FROM
+            employees;
+
+DESC employees02;
+
+-- EMP01 테이블에 문자 타입의 직금(JOB) 칼럼을 추가
+ALTER TABLE emp01 ADD (
+    job VARCHAR2(9)
+);
+
+DESC emp01;
+
+--<문제>이미 존재하는 EMP01 테이블에 입사일 칼럼(CREDATE)을 날짜형으로 추가
+ALTER TABLE emp01 ADD (
+    credate DATE
+);
+
+DESC emp01;
+
+--직급을 최대 30자까지 입력할 수 있도록 크기 수정
+ALTER TABLE emp01 MODIFY (
+    job VARCHAR2(30)
+);
+
+DESC emp01;
+
+--입사일 컬럼의 이름을 CREDATE에서 REGDATE로 컬럼명 변경
+ALTER TABLE emp01 RENAME COLUMN credate TO regdate;
+
+DESC emp01;
+
+-- 직급(JOB) 칼럼을 삭제
+ALTER TABLE emp01 DROP COLUMN job;
+
+DESC emp01;
+
+--emp01 테이블 삭제
+DROP TABLE emp01;
+
+desc emp01;
