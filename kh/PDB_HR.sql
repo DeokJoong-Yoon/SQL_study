@@ -594,3 +594,626 @@ DESC emp01;
 DROP TABLE emp01;
 
 desc emp01;
+
+--drop한 emp01 테이블을 emp02 이름으로 복원한다.
+FLASHBACK TABLE emp01 TO BEFORE DROP RENAME TO emp02;
+
+SELECT
+    *
+FROM
+    tab;
+
+-- EMPLOYEES02 테이블의 이름을 EMPLOYEES01으로 변경
+RENAME employees02 TO employees01;
+
+SELECT
+    *
+FROM
+    tab;
+    
+-- EMPLOYEES01 테이블의 모든 로우를 제어
+SELECT
+    *
+FROM
+    employees01;
+
+TRUNCATE TABLE employees01; -- 자동커밋된다. ( = 복원 불가 )
+
+CREATE TABLE tb_customer (
+    customer_cd  CHAR(7 BYTE) NOT NULL PRIMARY KEY,
+    customer_nm  VARCHAR2(15 CHAR) NOT NULL,
+    mw_flg       CHAR(1) NOT NULL,
+    birth_day    CHAR(8) NOT NULL,
+    phone_number VARCHAR2(16),
+    email        VARCHAR2(50),
+    total_point  NUMBER(10),
+    reg_dttm     CHAR(14)
+);
+
+CREATE TABLE member (
+    id      NUMBER(20) NOT NULL PRIMARY KEY,
+    name    VARCHAR2(20) NOT NULL,
+    regno   CHAR(8) NOT NULL,
+    hp      VARCHAR2(13) NOT NULL,
+    address VARCHAR(100) NOT NULL
+);
+
+-- memeber 테이블에서 회원ID를 가변길이 문자형식으로 변경
+ALTER TABLE member MODIFY (
+    id VARCHAR2(20)
+);
+
+DESC member;
+
+CREATE TABLE book (
+    code    NUMBER(4) NOT NULL PRIMARY KEY,
+    title   VARCHAR2(100) NOT NULL,
+    count   NUMBER(6) NOT NULL,
+    price   NUMBER(10) NOT NULL,
+    publish VARCHAR2(50) NOT NULL
+);
+
+DESC book;
+
+CREATE TABLE book_order (
+    no      VARCHAR2(10) NOT NULL PRIMARY KEY,
+    id      VARCHAR(20) NOT NULL,
+    code    NUMBER(4) NOT NULL,
+    count   NUMBER(6) NOT NULL,
+    or_date DATE NOT NULL
+);
+
+CREATE TABLE dept (
+    deptno NUMBER(2),
+    dname  VARCHAR2(14),
+    loc    VARCHAR2(13)
+);
+
+INSERT INTO dept (
+    deptno,
+    dname,
+    loc
+) VALUES (
+    10,
+    'ACCOUNTING',
+    'NEW YORK'
+);
+
+INSERT INTO dept VALUES (
+    20,
+    'RESEARCH',
+    'DALLAS'
+);
+
+ALTER TABLE dept MODIFY (
+    deptno NOT NULL
+);
+
+ALTER TABLE dept MODIFY (
+    dname NOT NULL
+);
+
+DESC dept;
+
+SELECT
+    *
+FROM
+    dept;
+
+INSERT INTO dept (
+    deptno,
+    dname
+) VALUES (
+    30,
+    'SALES'
+);
+
+INSERT INTO dept VALUES (
+    40,
+    'OPERATIONS',
+    NULL
+);
+
+INSERT INTO dept VALUES (
+    50,
+    ' ',
+    NULL
+);
+
+ALTER TABLE dept MODIFY (
+    deptno NUMBER(4),
+    dname VARCHAR2(30)
+);
+
+INSERT INTO dept
+    SELECT
+        department_id,
+        department_name,
+        location_id
+    FROM
+        departments;
+
+SELECT
+    *
+FROM
+    dept;
+
+desc tb_customer;
+
+-- <문제> TB_CUSTOMER 테이블에 아래 데이터를 추가하라
+INSERT INTO tb_customer (
+    customer_cd,
+    customer_nm,
+    mw_flg,
+    birth_day,
+    phone_number,
+    email,
+    total_point,
+    reg_dttm
+) VALUES (
+    '2017042',
+    '강원진',
+    'M',
+    '19810603',
+    '010-8202-8790',
+    'wjgang@navi.com',
+    280300,
+    '20170123132432'
+);
+
+INSERT INTO tb_customer (
+    customer_cd,
+    customer_nm,
+    mw_flg,
+    birth_day,
+    phone_number,
+    email,
+    total_point,
+    reg_dttm
+) VALUES (
+    '2017053',
+    '나경숙',
+    'W',
+    '19891225',
+    '010-4509-0043',
+    'ksna@boram.co.kr',
+    4500,
+    ' 20170210180930 '
+);
+
+INSERT INTO tb_customer (
+    customer_cd,
+    customer_nm,
+    mw_flg,
+    birth_day,
+    phone_number,
+    email,
+    total_point,
+    reg_dttm
+) VALUES (
+    '2017108',
+    '박승태',
+    'm',
+    '19711430',
+    NULL,
+    'sdpark@haso.com',
+    280300,
+    '20170123132432'
+);
+
+DELETE FROM tb_customer;
+
+SELECT
+    *
+FROM
+    tb_customer;
+
+INSERT ALL INTO tb_customer (
+    customer_cd,
+    customer_nm,
+    mw_flg,
+    birth_day,
+    phone_number,
+    email,
+    total_point,
+    reg_dttm
+) VALUES (
+    '2017042',
+    '강원진',
+    'M',
+    '19810603',
+    '010-8202-8790',
+    'wjgang@navi.com',
+    280300,
+    '20170123132'
+) INTO tb_customer VALUES (
+    '2017053',
+    '나경숙',
+    'W',
+    '19891225',
+    '010-4509-0043',
+    'ksna@boram.co.kr',
+    4500,
+    ' 20170210130 '
+) INTO tb_customer VALUES (
+    '2017108',
+    '박승태',
+    'm',
+    '19711430',
+    NULL,
+    'sdpark@haso.com',
+    280300,
+    '20170123132'
+) SELECT
+      *
+  FROM
+      dual;
+
+desc dual;
+
+SELECT
+    100 + 4
+FROM
+    dual;
+
+SELECT
+    sysdate
+FROM
+    dual;
+
+SELECT
+    to_char(sysdate, 'YYYY-MM-DD HH24:MI:SS') AS now
+FROM
+    dual;
+
+SELECT
+    *
+FROM
+    tb_customer;
+
+CREATE TABLE emp01
+    AS
+        SELECT
+            employee_id,
+            first_name,
+            department_id,
+            hire_date
+        FROM
+            employees
+        WHERE
+            1 = 0;
+
+DESC emp01;
+
+CREATE TABLE emp_manager
+    AS
+        SELECT
+            employee_id,
+            first_name,
+            manager_id
+        FROM
+            employees
+        WHERE
+            1 = 0;
+
+DESC emp_manager;
+
+-- EMP01 테이블에 EMPLOYEES 테이블에서 부서코드가 30인 직원의 사번, 이름, 소속부서, 입사일을 삽입하고
+-- EMP_MANAGER 테이블에 EMPLOYEES 테이블의 부서코드가 30인 직원의 사번, 이름, 관리자 사번을 조회하여 삽입
+INSERT ALL INTO emp01 VALUES (
+    employee_id,
+    first_name,
+    department_id,
+    hire_date
+) INTO emp_manager VALUES (
+    employee_id,
+    first_name,
+    manager_id
+) SELECT
+        employee_id,
+        first_name,
+        department_id,
+        hire_date,
+        manager_id
+    FROM
+        employees
+  WHERE
+      department_id = 30;
+
+SELECT
+    *
+FROM
+    emp01;
+
+SELECT
+    *
+FROM
+    emp_manager;
+
+-- EMPLOYEES 테이블의 구조를 복사하여 사번, 입사일, 급여를 저장할 수 있는 테이블 EMP_OLD와 EMP_NEW 생성
+CREATE TABLE emp_old
+    AS
+        SELECT
+            employee_id,
+            first_name,
+            hire_date,
+            salary
+        FROM
+            employees
+        WHERE
+            1 = 0;
+
+DESC emp_old;
+
+SELECT
+    *
+FROM
+    emp_old;
+
+CREATE TABLE emp_new
+    AS
+        SELECT
+            employee_id,
+            first_name,
+            hire_date,
+            salary
+        FROM
+            employees
+        WHERE
+            1 = 0;
+
+DESC emp_new;
+
+SELECT
+    *
+FROM
+    emp_new;
+-- EMPLOYEES 테이블의 입사일 기준으로
+-- 2006년 1월 1일 전에 입사한 사원의 사번, 이름, 입사일, 급여를 조회해서 EMP_OLD 테이블에 삽입
+--                       후에 입사한 사원의 정보는 EMP_NEW 테이블에 삽입
+
+INSERT
+    ALL WHEN hire_date < '2006/01/01' THEN
+        INTO emp_old
+        VALUES (
+            employee_id,
+            first_name,
+            hire_date,
+            salary
+        )
+        WHEN hire_date >= '2006/01/01' THEN
+            INTO emp_new
+            VALUES (
+                employee_id,
+                first_name,
+                hire_date,
+                salary
+            )
+SELECT
+    employee_id,
+    first_name,
+    hire_date,
+    salary
+FROM
+    employees;
+
+SELECT
+    *
+FROM
+    emp_old;
+
+SELECT
+    *
+FROM
+    emp_new;
+
+CREATE TABLE emp
+    AS
+        SELECT
+            *
+        FROM
+            employees;
+
+UPDATE emp
+SET
+    department_id = 30;
+
+UPDATE emp
+SET
+    salary = salary * 1.1;
+
+UPDATE emp
+SET
+    hire_date = sysdate;
+
+UPDATE emp
+SET
+    department_id = 30
+WHERE
+    department_id = 10;
+
+-- 급여가 3000이상인 사원만 급여를 10% 인상
+UPDATE emp
+SET
+    salary = salary * 1.3
+WHERE
+    salary >= 3000;
+    
+-- 2007년에 입사한 사원의 입사일이 오늘로 수정한다.
+UPDATE emp
+SET
+    hire_date = sysdate
+WHERE
+--    substr(hire_date, 1, 2) = '07';
+    hire_date BETWEEN '2007/01/01' AND '2007/12/31';
+
+SELECT
+    hire_date,
+    first_name
+FROM
+    emp
+WHERE
+--    substr(hire_date, 1, 2) = '07';
+    hire_date BETWEEN '2007/01/01' AND '2007/12/31';
+
+SELECT
+    hire_date,
+    first_name
+FROM
+    emp
+WHERE
+    hire_date >= '2023/12/07';
+
+SELECT
+    *
+FROM
+    emp
+WHERE
+    first_name = 'Susan';
+
+UPDATE emp
+SET
+    department_id = 29,
+    job_id = 'FI_MGR'
+WHERE
+    first_name = 'Susan';
+
+SELECT
+    *
+FROM
+    emp
+WHERE
+    last_name = 'Russell';
+
+UPDATE emp
+SET
+    salary = 17000,
+    commission_pct = 0.45
+WHERE
+    last_name = 'Russell';
+
+DELETE FROM dept;
+
+desc dept;
+
+DELETE FROM emp
+WHERE
+    last_name = 'Russell';
+
+SELECT
+    *
+FROM
+    emp
+WHERE
+    last_name = 'Russell';
+
+-- 구조가 같은 두 개의 테이블을 하나의 테이블로 합치는 기능 제공
+-- 두 테이블에서 지정하는 조건의 값이 존재하면 UPDATE되고 조건의 값이 없으면 INSERT 함
+MERGE INTO tb_customer cu
+USING tb_add_customer nc ON ( cu.customer_cd = nc.customer_cd )
+WHEN MATCHED THEN UPDATE
+SET cu.customer_nm = nc.custmer_nm,
+    cu.mw_flg = nc.mw_flg,
+    cu.birth_day = nc.birth_day,
+    cu.phone_number = nc.phone_number
+WHEN NOT MATCHED THEN
+INSERT (
+    cu.customer_cd,
+    cu.customer_nm,
+    cu.mw_flg,
+    cu.birth_day,
+    cu.phone_number,
+    cu.email,
+    cu.total_point,
+    cu.reg_dttm )
+VALUES
+    ( nc.custmer_cd,
+      nc.customer_nm,
+      nc.mw_flg,
+      nc.birgh_day,
+      nc.phone_number,
+    '',
+    0,
+    to_char(sysdate, 'YYYYMMDDHHMISS') );
+
+SELECT
+    *
+FROM
+    tb_customer;
+    
+select * from book;
+select * from book_order;
+
+DROP table emp01 purge;
+
+create table emp01(
+empno number(4) not null,
+ename varchar2(10) not null,
+job varchar2(9),
+deptno number(4)        
+);
+
+create table emp02 (
+    empno number(4) unique,
+    ename varchar2(10) not null,
+    job varchar(9),
+    deptno number(4)
+);
+insert into emp02(empno, ename, job, deptno)
+values (7499, 'allen', 'salesman', 30);
+
+select TABLE_NAME from user_tables
+order by table_name desc;
+
+select constraint_name, constraint_type, table_name
+from user_constraints
+where table_name = 'EMP02';
+
+select owner, constraint_name, table_name, column_name from user_cons_columns where table_name = 'EMP02';
+
+create table emp03(
+    empno number(4) primary key,
+    ename varchar2(10) not null,
+    job varchar2(9),
+    deptno number(4)
+);
+select * from emp03;
+insert into emp03 values(7499, 'allen', 'salesman', 30);
+insert into emp03 values(null, 'allen', 'salesman', 30);
+select constraint_name, constraint_type, table_name from user_constraints where table_name = 'EMP03';
+
+create table dept01(
+    deptno number(2) primary key,
+    dname varchar2(14) not null,
+    loc varchar2(13)
+);
+insert into dept01 (deptno, dname, loc) values (10, 'ACCOUNTING', 'NEW YORK');
+insert into dept01 (deptno, dname, loc) values (20, 'RESEARCH', 'DALLAS');
+insert into dept01 (deptno, dname, loc) values (30, 'SALES', 'CHICAGO');
+insert into dept01 (deptno, dname, loc) values (40, 'OPERATIONS', 'BOSTON');
+select * from dept01 order by deptno;
+insert into emp03 values(7566, 'JONES', 'MANAGER', 50);
+select * from emp03;
+
+create table emp04(
+    empno number(4) primary key,
+    ename varchar2(10) not null,
+    job varchar2(9),
+    deptno number(2) references dept01(deptno)
+);
+
+insert into emp04 values(1234, 'asfd', 'qwer', 40);
+
+select constraint_name, constraint_type, table_name, r_constraint_name from user_constraints where table_name = 'EMP04';
+
+create table emp05(
+    empno number(4) primary key,
+    ename varchar2(10) not null,
+    gender char(1) check (gender in ('M', 'F')),
+    regdate date default sysdate
+);
+insert into emp05(empno, ename, gender) values(1234, 'asdf', 'M');
+
+select * from emp05;
+
+select constraint_name constraint_type, table_name, search_condition from user_constraints where table_name = 'EMP05';
