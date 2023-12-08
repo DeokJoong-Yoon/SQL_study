@@ -1217,3 +1217,417 @@ insert into emp05(empno, ename, gender) values(1234, 'asdf', 'M');
 select * from emp05;
 
 select constraint_name constraint_type, table_name, search_condition from user_constraints where table_name = 'EMP05';
+
+
+
+--20231208
+-----------------------------------------------------------------------------------------------------------------------------------
+-- 컬럼 레밸 형식 제약조건
+create table emp06 (
+    empno number(4) constraint emp06_empno_pk primary key,
+    ename varchar2(10) constraint emp06_ename_nn not null,
+    job varchar2(9) constraint emp06_job_uk unique,
+    deptno number(2) constraint emp06_deptno_fk references dept01(deptno)
+);
+desc emp06;
+select constraint_name constraint_type, table_name, r_constraint_name from user_constraints where table_name = 'EMP06';
+
+
+insert into emp06
+values(7499, 'aleen', 'salesman', 30);
+select * from emp06;
+
+--ORA-00001: 무결성 제약 조건(HR.EMP06_EMPNO_PK)에 위배됩니다
+Insert into emp06 values(7499, 'allen', 'salesman', 30);
+
+--ORA-01400: NULL을 ("HR"."EMP06"."ENAME") 안에 삽입할 수 없습니다
+insert into emp06 values(7499, NULL, 'salesman', 50);
+
+--ORA-00001: 무결성 제약 조건(HR.EMP06_EMPNO_PK)에 위배됩니다
+insert into emp06 values(7499, 'allen', 'salesman', 50);
+
+--ORA-00001: 무결성 제약 조건(HR.EMP06_JOB_UK)에 위배됩니다
+insert into emp06 values(7500, 'allen', 'salesman', 50);
+
+--ORA-02291: 무결성 제약조건(HR.EMP06_DEPTNO_FK)이 위배되었습니다- 부모 키가 없습니다
+insert into emp06 values(7500, 'ellen',  ' manager', 50);
+
+create table emp08(
+    empno number(4),
+    ename varchar2(10) not null,
+    job varchar2(9),
+    deptno number(2),
+    constraint emp08_empno_pk primary key(empno),
+    constraint emp08_job_uk unique(job),
+    constraint emp08_emptno_fk foreign key(deptno) references dept01(depno);
+);
+
+create table emp09 (
+    empno number(4),
+    ename varchar2(10),
+    job varchar2(9),
+    deptno number(2)
+);
+select constraint_name, constraint_type, table_name, r_constraint_name from user_constraints where table_name='EMP09';
+
+-- 제약조건명을 명시하지 않고 기본키 추가
+alter table emp09
+add primary key(empno);
+
+-- 제약조건명을 명시하고 외래키 추가
+alter table emp09
+add constraint emp09_deptno_fk foreign key(deptno) references dept01(deptno);
+
+-- ENAME 컬럼에 NOT NULL 제약 조건 변경(null, check default는 제야조건이 이미 있기 때문에 modify로 변경해야한다.)
+alter table emp09
+modify (ename varchar2(10)) not null;
+
+alter table emp09
+add constraint emp09_empno_pk primary key(empno);
+
+alter table emp09
+add constraint emp09_empno_fk foreign key(deptno) references dept01(deptno);
+
+select constraint_name, constraint_type, table_name, r_constraint_name
+from user_constraints
+where table_name = 'dept01';
+
+-- HR 사용자로 생성한 DEPT01 테이블과 참조키(외래키) 설정 테이블 확인
+select fk.owner, fk.constraint_name, fk.table_name
+from all_constraints fk, all_constraints pk
+where fk.r_constraint_name = pk.constraint_name
+    and pk.owner = 'HR'
+    and fk.constraint_type = 'R'
+    and pk.table_name = 'DEPT01'
+    order by fk.table_name;
+
+select * from emp06;
+select constraint_name, constraint_type, table_name, r_constraint_name
+from user_constraints
+where table_name = 'EMP06';
+-- 제약조건 삭제
+-- alter table 테이블명
+-- drop constraint 제약조건명;
+alter table emp06
+drop constraint emp06_job_uk;
+
+alter table emp06
+drop constraint emp06_deptno_fk;
+
+alter table emp06
+drop primary key;
+
+create table dept02(
+    deptno number(2),
+    dname varchar2(14) not null,
+    loc varchar2(13),
+    constraint dept02_deptno_pk primary key(deptno)
+);
+
+select constraint_name, constraint_type, table_name, r_constraint_name
+from user_constraints
+where table_name = 'DEPT02';
+
+insert into dept02 values(10, 'ACCOUNTING', 'NEW YORK');
+insert into dept02 values(20, 'RESEARCH', 'DALLAS');
+select * from dept02;
+
+DROP TABLE EMP02;
+
+create table emp02(
+    empno number(4),
+    ename varchar2(10) not null,
+    job varchar2(9),
+    deptno number(2),
+    constraint emp02_empno_pk primary key(empno),
+    constraint emp02_empno_fk foreign key(deptno) references dept02(deptno)
+);
+
+select constraint_name, constraint_type, table_name, r_constraint_name
+from user_constraints where table_name = 'EMP02';
+
+insert into emp02 values(7499, 'ALLEN', 'SALESMAN', 10);
+insert into emp02 values(7369, 'SMITH', 'CLERK', 20);
+select * from emp02;
+select * from dept02;
+delete from dept02 where deptno = 10;
+
+update emp02
+set deptno = 20
+where empno = 7499;
+
+-- 사원 테이블에 부서번호가 10인 사원을 먼저 삭제하고
+delete from emp02 where deptno =10;
+
+create table treatment(
+    t_no number(4) not null,
+    t_course_abbr varchar2(3) not null,
+    t_course varchar2(30) not null,
+    t_tel varchar2(15) not null,
+    constraint treatment_no_pk primary key(t_no),
+    constraint treatment_course_abbr_uk unique(t_course_abbr)
+);
+
+-- 테이블의 컬럼에 주석을 다는 구문
+-- 표현식
+-- comment on column 테이블명.컬럼명 IS '주석 내용';
+comment on column treatment.t_no is '진료번호';
+comment on column treatment.t_course_abbr is '진료과목약어';
+comment on column treatment.t_course is '진료과목';
+comment on column treatment.t_tel is '전화번호';
+select table_name, column_name, comments
+from all_col_comments
+where table_name = 'TREATMENT';
+
+insert into treatment values(1001, 'NS', '신경외과', '02-3252-1009');
+insert into treatment values(1002, 'OS', '정형외과', '02-3252-2009');
+insert into treatment values(1003, 'C', '순환기내과', '02-3252-3009');
+select * From treatment;
+
+create table doctor(
+    d_no number(4) not null,
+    d_name varchar2(20) not null,
+    d_ssn char(14) not null,
+    d_email varchar2(80) not null,
+    d_major varchar(50) not null,
+    t_no number(4) ,
+    constraint doctor_d_no_pk primary key(d_no)
+);
+
+alter table doctor
+add constraint doctor_t_no foreign key(t_no) references treatment(t_no)
+on delete cascade;
+
+insert into doctor values(1, '홍길동', '660606-1234561', 'javauser@naver.com', '척추신경외과', 1001);
+insert into doctor values(2, '이재환', '690724-1674536' 'asdf@naver.com', '뇌졸증, 뇌혈관외과' 1003);
+insert into doctor values(3, '양익환', '761212-1958354', 'qwer@naver.com', '인공관절, 관절염', 1002);
+insert into doctor values(4, '김승현', '957381-1285746', 'zxv@naver.com', '종양외과, 외상전문', 1002);
+
+delete from treatment where t_no = 1002;
+
+select * from treatment;
+select * from doctor;
+
+rollback;
+alter table doctor
+drop constraint doctor_t_no;
+
+alter table doctor
+add constraint doctor_t_no foreign key(t_no) references treatment(t_no)
+on delete set null;
+
+delete from treatment where t_no = 1002;
+
+select * from treatment;
+select * from doctor;
+
+-- 만약 T_NO 컬러이 NOT NULL 로 설정되어 있다면 NULL을 허용하는 컬럼으로 변경
+alter table doctor
+modify (t_no number(4) null);
+
+select * from employees, departments;
+
+
+-- 조인 ( Join )
+-----------------------------------------------------------------------------------------------------------------------------------
+select employee_id, first_name, department_id from employees;
+select department_id, department_name from departments;
+
+select first_name, department_name from employees, departments
+where employees.department_id = departments.department_id;
+
+-- 조인시 공통컬럼을 조회하고 할때는 반드시 테이블명.컬럼 또는 테이블 별칭.컬럼으로 명시
+-- ORA-009128 : 열의 정의가 애매합니다. 조인대상의 테이블의 공통 컬럼은 select 시 컬럼을 지정해야한다.
+select first_name, department_name, department_id
+from employees, departments
+where employees.department_id = departments.department_id;
+
+select first_name, department_name, employees.department_id
+from employees, departments
+where employees.department_id = departments.department_id;
+
+-- 테이블명을 간단한 별칭으로 접근가능
+select first_name, department_name, e.department_id
+from employees e, departments d
+where e.department_id = d.department_id;
+
+select e.first_name, d.department_name
+from employees e, departments d
+where e.department_id = d.department_id and e.first_name = 'Susan';
+
+select * from jobs;
+-- 사원 테이블(EMPLOYEES) 과 직무 (JOBS) => 공통컬럼 : JOB_ID
+-- 사원 테이블(EMPLOYEES) 과 부서 (DEPARTMENTS) => 공통컬럼 : DEPARTMENT_ID
+-- 사원명, 직무ID, 직무명(JOB_TITLE), 부서번호, 부서명을 출력
+select first_name, e.job_id, job_title, e.department_id, department_name
+from employees e, jobs j, departments d
+where e.job_id = j.job_id and e.department_id = d.department_id;
+
+create table salarygrade  (
+    grade number,
+    minsalary number,
+    maxsalary number
+);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(1, 2000, 3000);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(2, 3001, 4500);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(3, 4501, 6000);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(4, 6001, 8000);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(5, 8001, 10000);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(6, 10001, 13000);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(7, 13001, 20000);
+INSERT INTO SALARYGRADE (GRADE, MINSALARY, MAXSALARY) VALUES(8, 20001, 30000);
+select * from salarygrade;
+
+commit;
+
+select * from salarygrade;
+select e.first_name, e.salary, s.grade
+from employees e, salarygrade s
+where e.salary between s.minsalary and s.maxsalary;
+--order by grade desc;
+
+select e.first_name, e.salary, s.grade
+from employees e, salarygrade s
+where e.salary >= s.minsalary and e.salary <= s.maxsalary;
+
+select e.first_name, d.department_id, department_name
+from employees e, departments d
+where e.department_id = d.department_id
+order by d.department_id desc;
+
+
+
+select * from departments;
+
+-- Outer Join
+-- 부서테이블으 ㅣ부서번호는 전부 출력하고 사원테이블에 테이터는 조건에 일치하는 데이터만 출력할 때
+-- Outer Join을 사용
+select e.first_name, d.department_id, department_name
+from employees e, departments d
+where e.department_id(+) = d.department_id;
+
+select e.first_name, d.department_id, department_name
+from employees e, departments d
+where d.department_id = e.department_id(+) order by department_id desc;
+
+-- 2007년도 상반기에 입사한 사원의 사원번호, 이름, 입사일, 부서번호를 구해보자.
+-- (결과 행의 수 : 12)
+select employee_id, first_name, hire_date, department_id
+from employees
+--where hire_date >= '2007/01/01' and hire_date <= '2007/06/30';
+where hire_date between '2007/01/01' and '2007/06/30';
+
+-- 2007년도 상반기에 입사한 사원의 사원번호, 이름, 입사일, 부서명을 출력.
+-- (결과 행의 수 : 11)
+select employee_id, first_name, hire_date, d.department_name
+from employees e, departments d
+where e.department_id = d.department_id(+) and hire_date between '2007/0101' and '2007/06/30';
+
+-- SELFT JOIN
+
+-- 사원명과 사원의 매니저(상사) 이름을 출력하기 위한 쿼리만
+select  work.first_name 사원명, manager.first_name 매니저명
+from employees work, employees manager
+where work.manager_id = manager.employee_id;
+
+-- 사원 테이블 (사원번호, 사원명, 관리자번호)
+select employee_id, first_name, manager_id
+from employees;
+
+-- 관리자 테이블(관리자번호가 사원번호이므로 관리자사원번호, 관리자명)
+select employee_id, first_name
+from employees order by employee_id;
+
+
+select rpad(work.first_name, 11, ' ') || '의 매니저는 ' || manager.first_name || '이다.' AS "그 사원의 매니저"
+from employees work, employees manager
+where work.manager_id = manager.employee_id;
+
+select concat (concat(concat(rpad(work.first_name, 11, ' '), '의 매니저는 '), manager.first_name), '이다.')
+as "그 사원의 매니저"
+from employees work, employees manager
+where work.manager_id = manager.employee_id;
+
+
+-- INNER JOIN
+select first_name, department_name
+from employees inner join departments
+on employees.department_id = departments.department_id;
+
+-- JOIN만 작성 시 기본값은 INNER JOIN
+select first_name, department_name
+from employees join departments
+on employees.department_id = departments.department_id;
+
+-- 사원 테이블(EMPLOYEES) 과 직무 테이블 (JOBS) => 공통컬럼 : JOB_ID
+-- 사원 테이블(EMPLOYEES) 과 부서 테이블 (DEPARTMENTS) => 공통컬럼 : DEPARTMENT_ID
+-- 사원명, 직무ID, 직무명(JOB_TITLE), 부서번호, 부서명을 출력
+select first_name, e.job_id, job_title, d.department_id, department_name
+from employees e inner join jobs j on e.job_id = j.job_id
+                          inner join departments d on e.department_id = d.department_id;
+
+-- 연결에 사용하려는 컬럼 명이 같은 경우 USING() 사용, 다른 경우 ON() 사용
+select employees.first_name, departments.department_name
+from employees inner join departments
+using (department_id);
+
+-- 조인의 조건과 데이터 검색을 위한 조건 부여
+select first_name, department_name
+from employees inner join departments
+on employees.department_id = departments.department_id
+where first_name = 'Susan';
+
+-- OUTER JOIN
+select e.first_name, d.department_id, d.department_name
+from employees e right outer join departments d
+on e.department_id = d.department_id;
+
+select e.first_name, d.department_id, d.department_name
+from departments d left outer join employees e
+on e.department_id = d.department_id;
+
+--2007년 상반기에 입력한 사원번호, 사원명, 입사일, 부서명을 출력
+select employee_id, first_name, hire_date, d.department_name
+from employees e left outer join departments d
+on e.department_id = d.department_id
+where hire_date between '2007/01/01' and '2007/06/30';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
