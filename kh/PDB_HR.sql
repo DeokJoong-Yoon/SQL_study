@@ -1593,33 +1593,387 @@ on e.department_id = d.department_id
 where hire_date between '2007/01/01' and '2007/06/30';
 
 
+--20231211
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Cafe - DB 과제 게시판 [오라클] 조인 관련 예제
+-- [조인 예제]
+-- 1. Sales 부서 소속 사원의 이름과 입사일을 출력하라.
+select first_name, hire_date
+from employees e inner join departments d
+on e.DEPARTMENT_ID = d.DEPARTMENT_ID
+where d.department_name = 'Sales';
+
+-- 2. 커미션을 받는 사원의 이름, 커미션 비율과 그가 속한 부서명을 출력하라.
+select  first_name, commission_pct, department_name
+from employees e inner join departments d
+on e.department_id = d.department_id
+where commission_pct IS NOT NULL;
+
+-- 3. IT부서에서 근무하고 있는 사원번호, 이름, 업무, 부서명을 출력하라
+select
+employee_id, first_name, job_id, department_name
+from
+employees e inner join departments d
+on
+e.department_id = d.department_id
+where
+department_name = 'IT';
+
+-- 4. Guy과 동일한 부서에서 근무하는 동료들의 이름과 부서번호를 출력하라.
+select first_name, department_id
+from employees
+where department_id = (select department_id from employees where first_name = 'Guy');
+
+select e2.first_name, e2.department_id
+from employees e1 inner join employees e2
+on e1.department_id = e2.department_id
+where e1.first_name = 'Guy';
+select * from locations;
+--5. EMPLOYEES, DEPARTMENTS, LOCATIONS 테이블의  구조를 파악한 후 
+--Oxford에 근무하는 사원의 성과 이름(Name으로 별칭), 업무, 부서명, 도시명을 출력하시오.
+select first_name || ' ' || last_name as Name, job_name, department_name, city
+from employees e inner join (departments d inner join locations l on d.location_id = l.location_id)
+where;
+ select * from departments;
+
+--6. 각 사원과 직속 상사와의 관계를 이용하여 다음과 같은 형식의 보고서를 작성하고자 한다. 
+--홍길동은 허균에게 보고한다 → Eleni Zlotkey report to Steven King
+--어떤 사원이 어떤 사원에서 보고하는지를 위 예를 참고하여 출력하시오. 
+--단, 보고할 상사가 없는 사원이 있다면 그 정보도 포함하여 출력하고, 상사의 이름은 대문자로 출력하시오
+
+?
+
+--7. EMPLOYEES, DEPARTMENTS 테이블의 구조를 파악한 후 사원수가 5명 이상인 부서의 부서명과 사원수를 출력하시오. 
+--   이때 사원수가 많은 순으로 정렬하시오.
+
+
+-- 문자형으로 변환하는 TO_CHAR 함수(간단한 날짜 변환)
+select
+    sysdate, to_char(sysdate, 'YYYY-MM-DD'), to_char(sysdate, 'DL')
+from dual;
+
+select to_char(hire_date, 'YYYY/MM/DD DAY')
+from employees
+where department_id = 30;
+
+select to_char(hire_date, 'YYYY"년" MM"월" DD"일" DAY') hire_date
+from employees
+where department_id = 30;
+
+select to_char(hire_date, 'YYYY/MON/DD DY')
+from employees
+where department_id = 30;
+
+select to_char(sysdate, 'DDD')
+        , to_char(sysdate, 'WW')
+        , to_char(sysdate, 'Q')
+from dual;
+
+select to_char(sysdate, 'PM')
+        , to_char(sysdate, 'PM HH:MI:SS')
+        , to_char(sysdate, 'HH24"시" MI"분" SS"초"')
+from dual;
+
+-- 오늘 날짜와 시간 출력
+select to_char(sysdate, 'YYYY-MM-DD HH24:MI:SS') from dual;
+
+-- 숫자형을 문자형으로 변환하기
+select to_char(1234, '999,999')                        -- 1,234
+        , to_char(123467, 'FM999,999')                -- 123,567
+        , to_char(123467890, 'FM999,999,999')      -- 123,467,890
+        , to_char(123467, 'FML999,999')               -- \123,467
+from dual;
+
+select to_char(1, '00') from dual;           -- ' 01' 로 보이지만 공백이 앞에 하나 들어가있다.  부호자리이다.
+select to_char(1, 'FM00') from dual;       -- '01' 로 공백(부호자리)이 사라진다.
+
+-- FM : 문자열의 공백제거
+-- 숫자의 최대 길이만큼 9999.... 형식을 지정한다. ( 9 : 값이 없으면 표기안함, 0 : 값이 없으면 "0" 으로 처리)
+-- 정수는 지정한 형식보다 값의 길이가 길면 정확하게 표현 불가, 소수 지정한 길이보다 길면 반올림
+select first_name, salary, to_char(salary, '$999,999') as salaryformat
+from employees
+where department_id = 30;
+
+-- 날짜형으로 변환하는 TO_DATE 함수
+-- 2005년 12월 24일에 입사한 직원을 검색
+select first_name, hire_date
+from employees
+where hire_date = '05/12/24';
+
+select first_name, hire_date
+from employees
+where hire_date = to_date('20051224', 'YYYYMMDD');
+
+-- 문자열 데이터 '210505'를 2021년 05월 05일'로 표현
+-- ORA-01481: 숫자 형식 모델이 부적합합니다
+select to_char('210505', 'YYYY"년" MM"월" DD"일"') from dual;    --오류
+-- 해결
+select to_char(to_date('210505', 'YYMMDD'), 'YYYY"년" MM"월" DD"일"') as 날짜 from dual;
+
+-- 문자열 데이터 '210505'를 '2021년 5월 5일'로 표현(날짜의 "0" 없애기)
+select to_char(to_date('210505', 'YYMMDD'), 'YYYY"년" fmMM"월" DD"일"') as 날짜 from dual;
+
+-- 올해 며칠이 지났는지 날짜 계산 <= dhfbqkftod
+-- ORA-01722: 수치가 부적합합니다
+select sysdate -'2023/10/13' from dual;
+
+-- 올해 며칠이 지났는지 날짜 계산
+select trunc(sysdate-to_date('2023/10/13', 'YYYY/MM/DD')) as 기간 from dual;
+
+
+-- 숫자형으로 변환하는 TO_NUMBER 함수
+-- 수치 형태의 문자 값의 차 구하기 <= 오류발생
+-- ORA-01722: 수치가 부적합합니다
+select '10,000' + '20,000' from dual;
+
+-- 수치 형태의 문자 값의 차 구하기 <= 오류해결
+select to_number('10,000', '999,999') + to_number('20,000', '999,999') as 합계
+from dual;
+
+select to_char(to_number('10,000', '999,999') + to_number('20,000', '999,999'), '999,999') as 합계
+from dual;
+
+-- NULL을 다른 값으로 변환하는 NVL 함수
+-- NVL(컬럼, 컬럼의 값이 NULL일 때 대체값);
+select first_name, salary, commission_pct, job_id
+from employees
+order by job_id;
+
+select first_name, salary, nvl(commission_pct, 0), job_id
+from employees
+order by job_id;
+
+select first_name, salary, commission_pct,
+         salary * commission_pct as COMMISSION,
+         salary + (salary * commission_pct) as total, job_id
+from employees
+order by job_id;
+
+select first_name, salary, commission_pct,
+         salary * nvl(commission_pct, 0) as commission,
+         salary + (salary * nvl(commission_pct, 0)) as total, job_id
+from employees
+order by job_id;
+
+
+-- NVL2 함수
+-- NVL2(컬럼, 컬럼의 값이 NULL이 아니면 처리할 구문, 컬럼의 값이 NULL이면 처리할 구문)
+select first_name, salary, commission_pct,
+nvl2(commission_pct, salary + (salary*commission_pct), salary) total_sal
+from employees;
+
+
+--<문제> 모든 직원은 자신의 상관(MANAGER_ID)이 있다. 
+-- 하지만 MEPLOYEES 테이블에 유일하게 상관이 없는 로우가 있는데 그 사원의 MANAGER_ID 칼럼 값이 NULL이다.
+-- 상관이 없는 대표이사만 출력하되 MANAGER_ID 칼럼 값 NULL 대신 CEO로 출력한다.
+select employee_id, first_name, nvl(manager_id, 0) from employees
+where manager_id is null;
+
+-- ORA-01722: 수치가 부적합합니다
+select employee_id, first_name, nvl(manager_id, 'CEO') from employees
+where manager_id is null;
+
+select employee_id, first_name, nvl(to_char(manager_id), 'CEO') from employees
+where manager_id is null;
+desc employees;
+
+
+--<문제>커미션 정보가 없는 직원들도 있는데 커미션이 없는 직원 그룹은 '<커미션 없음>'이 출력되게 한다.
+select employee_id, first_name,
+nvl(to_char(commission_pct), '<커미션 없음>')  as commssion
+from employees
+where commission_pct is null;
+
+-- 선택을 위한 DECODE 함수
+select department_id,
+decode(department_id, 10, 'Administration',
+                                20, 'Martketing',
+                                30, 'Purchasing',
+                                40, 'Human Resources',
+                                50, 'Shipping',
+                                60, 'IT') as departments
+from employees
+order by department_id;
+
+-- 조건에 따라 서로 다른 처리가 가능한 CASE 함수(범위 설정 가능)
+select employee_id, first_name, department_id,
+        case when department_id = 10 then 'Administration'
+               when department_id = 20 then 'Marketing'
+               when department_id = 30 then 'Purchasing'
+               when department_id = 40 then 'Human Resources'
+               when department_id = 50 then 'Shipping'
+               when department_id = 60 then 'IT'
+               -- else 'Public Relations'
+        end department_name
+from employees
+where department_id between 10 and 60
+order by department_id;
+
+select employee_id, first_name, department_id,
+        case department_id when 10 then 'Administration'
+                                    when 20 then 'Marketing'
+                                    when 30 then 'Purchasing'
+                                    when 40 then 'Human Resources'
+                                    when 50 then 'Shipping'
+                                    when 60 then 'IT'
+                                    -- else 'Public Relations'
+        end department_name
+from employees
+where department_id between 10 and 60
+order by department_id;
+
+--<문제> 부서명에 따라 급여를 인상하도록 하자. (직원번호, 직원명, 직급, 급여)
+-- 부서명이 'Marketing'인 직원 5%, 'Purchasing'인 사원은 10%, 'Human Resources'인 사원은 15%,
+-- 'IT'인 직원은 20% 인상한다.
+
+-- 부서명으로 조건 부여
+select employee_id, first_name, e.department_id, job_id, salary,
+        case when department_name = 'Marketing' then salary * 1.05
+               when department_name = 'Purchasing' then salary * 1.10
+               when department_name = 'Human Resources' then salary * 1.15
+               when department_name = 'IT' then salary * 1.20
+        else salary
+        end upsalary
+from employees e inner join departments d
+on e.department_id = d.department_id
+order by employee_id;
+
+select employee_id, first_name, e.department_id, job_id, salary,
+        case department_name when 'Marketing' then salary * 1.05
+                                         when 'Purchasing' then salary * 1.10
+                                         when 'Human Resources' then salary * 1.15
+                                         when 'IT' then salary * 1.20
+        else salary
+        end upsalary
+from employees e inner join departments d
+on e.department_id = d.department_id
+order by employee_id;
+
+
+-- Cafe DB 과제게시판 - [오라클] 기본 SELECT문 연습 예제
+-- [추가 예제] 
+-- 문제1) EMPLOYEES Table에서 이름, 급여, 커미션 금액, 총액(급여 + 커미션)을 구하여 총액이 많은 순서로 출력하라. 
+-- 단, 커미션이 NULL인 사람은 제외한다.
+select first_name, salary, commission_pct, salary * commission_pct as commission, salary + (salary * commission_pct) as total
+from employees
+where commission_pct IS NOT NULL
+order by total desc;
+
+
+-- 문제3) 급여가 $1,500부터 $3,000 사이의 사람은 급여의 15%를 회비로 지불하기로 하였다. 
+-- 이를 이름, 급여, 회비(소수점이하 반올림)를 출력하라.
+select first_name, salary, round(salary * 0.15) as 회비
+from employees
+where salary BETWEEN 1500 AND 3000;
+
+
+-- 그룹함수
+-- <예> 직원의 총 급여 구하기(SUM함수)
+select to_char(sum(salary) , '$999999') as total
+from employees;
+
+-- <예> 직원의 평균 급여 구하기 (AVG 함수)
+select avg(salary)
+from employees;
+-- ROUND : 반올림 함수 ROUND(숫자, 자릿수), ROUND(숫자) = ROUND(숫자, 0)
+select round(avg(salary), 1)
+from employees;
+-- FLOOR : 절삭 (소숫점이하 버림)
+select floor(avg(salary))
+from employees;
+
+-- <예> 최근에 입사한 사원과 가장 오래전에 입사한 직원원의 입사일 출력하기 (MAX/MIN 함수)
+select to_char(max(hire_date), 'YYYY-MM-DD'), to_char(min(hire_date), 'YYYY-MM-DD')
+from employees;
+
+-- <예> 사원수 구하기(COUNT 함수) null 값은 세지 않는다.
+select count(*), count(employee_id), count(commission_pct) from employees;
+
+select job_id from employees;
+
+select distinct job_id from employees;
+
+--<문제> JOB_ID의 종류가 몇 개인지 즉, 중복되지 않은 직업의 개수를 구해보자.
+select count(distinct job_id) from employees;
 
 
 
 
+-- 컬럼과 그룹 함수를 같이 사용할 때 유의할 점
+-- 결과 :
+select first_name, min(salary) from employees;
+--ORA-00937: 단일 그룹의 그룹 함수가 아닙니다
 
+select department_id
+from employees
+group by department_id
+order by department_id;
 
+--<예> 부서별 최대 급여와 최소 급여 구하기
+select department_id, count(*), max(salary) "최대 급여", min(salary) "최소 급여"
+from employees
+group by department_id
+order by department_id;
 
+-- <예> 부서별 사원의 급여 합, 평균 구하기
+select department_id, sum(salary) "급여의 합", round(avg(salary), 2) "급여의 평균(반올림)", floor(avg(salary)) "급여의 평균(절사)"
+from employees
+group by department_id
+order by department_id;
 
+--<문제> 부서별로 직원의 수와 커미션을 받는 직원의 수를 카운트 해 보자.
+select department_id, count(employee_id) as "직원의 수", count(commission_pct) as "커미션 받는 직원의 수"
+from employees
+group by department_id
+order by department_id;
 
+--<추가 질문> 급여가 8000이상인 사원들만 부서별로 사원수와 커미션을 받는 사원의 수를 출력.
+select department_id, count(employee_id) as "사원수", count(commission_pct) as "커미션 받는 수"
+from employees
+where salary >= 8000
+group by department_id
+order by department_id;
 
+--<문제> 부서별 같은 업무를 담당하는 사원의 수를 카운트해보자.
+select department_id,  job_id, count(employee_id) as "부서별 사원 수"
+from employees
+group by department_id, job_id
+order by department_id, job_id;
 
+-- <문제> 30번 부서에 소속된 사원 중에 오래 근무한 사원의 입사일을 출력
+select department_id, min(hire_date)
+from employees
+where department_id = 30
+group by department_id;
 
+-- 급여가 3000 이상인 사원들에 대해 부서별 급여의 평균
+select department_id, floor(avg(salary))
+from employees
+where salary >= 3000
+group by department_id
+order by department_id;
 
+-- 급여의 평균이 5000 이상인 부서별 정보 출력
+select department_id, floor(avg(salary))
+from employees
+where salary >= 3000
+group by department_id
+having floor(avg(salary)) >= 5000
+order by department_id;
 
+-- 부서별 최대급여와 최소급여를 출력하되 최대 급여가 5000 초과한 부서만 출력.
+select department_id, max(salary), min(salary)
+from employees
+group by department_id
+having max(salary) >= 5000
+order by department_id;
 
-
-
-
-
-
-
-
-
-
-
-
-
+-- 부서별 인원수를 구하여 그 인원수가 4명 초과하는 부서를 조회하는 쿼리문을 작성하시오.
+select department_id, count(employee_id)
+from employees
+group by department_id
+having count(employee_id) > 4
+order by department_id;
 
 
 
