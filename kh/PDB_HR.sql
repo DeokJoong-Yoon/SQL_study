@@ -533,7 +533,7 @@ WHERE
     department_id IN ( 20, 50 )
 ORDER BY
     first_name;
-    
+
 --사원번호, 사원명, 급여 3개의 칼럼으로 구성된 emp01 테이블
 CREATE TABLE emp01 (
     empno NUMBER(4),
@@ -1631,10 +1631,10 @@ where e1.first_name = 'Guy';
 select * from locations;
 --5. EMPLOYEES, DEPARTMENTS, LOCATIONS 테이블의  구조를 파악한 후 
 --Oxford에 근무하는 사원의 성과 이름(Name으로 별칭), 업무, 부서명, 도시명을 출력하시오.
-select first_name || ' ' || last_name as Name, job_name, department_name, city
-from employees e inner join (departments d inner join locations l on d.location_id = l.location_id)
-where;
- select * from departments;
+select first_name || ' ' || last_name as Name, e.job_id, d.department_name, city from employees e 
+inner join departments d on e.department_id = d.department_id
+inner join locations l on d.location_id = l.location_id
+where city = 'Oxford';
 
 --6. 각 사원과 직속 상사와의 관계를 이용하여 다음과 같은 형식의 보고서를 작성하고자 한다. 
 --홍길동은 허균에게 보고한다 → Eleni Zlotkey report to Steven King
@@ -1977,11 +1977,346 @@ order by department_id;
 
 
 
+-- 부서내에서 같은 직무를 담당하는(부서와 직무별) 사원의 급여의 합과 사원수
+select department_id, job_id, count(*), sum(salary)
+from employees
+group by department_id, job_id
+order by department_id;
+
+-- 부서별 급여의 합과 사원수
+select department_id, null job_id, count(*), sum(salary)
+from employees
+group by department_id;
+
+-- 전체 사원의 급여의 합과 사원수
+select null department_id, null job_id, sum(salary), count(*)
+from employees;
+
+
+SELECT DEPARTMENT_ID, JOB_ID, COUNT(*), SUM(SALARY)
+
+FROM EMPLOYEES GROUP BY DEPARTMENT_ID, JOB_ID
+
+
+UNION ALL
+
+SELECT DEPARTMENT_ID, NULL JOB_ID, COUNT(*), SUM(SALARY) -- 
+
+FROM EMPLOYEES 
+
+GROUP BY DEPARTMENT_ID
+
+UNION ALL
+
+SELECT NULL DEPARTMENT_ID, NULL JOB_ID, COUNT(*), SUM(SALARY) -- 
+
+FROM EMPLOYEES 
+
+ORDER BY DEPARTMENT_ID, JOB_ID;
+
+select department_id, job_id, count(*), sum(salary)
+from employees
+group by rollup(department_id, job_id)
+order by department_id;
+
+select department_id, job_id, count(*), sum(salary)
+from employees
+--group by rollup(department_id, job_id)
+group by cube(department_id, job_id)
+order by department_id;
+
+select department_id, job_id, sum(salary)
+from employees
+group by rollup(department_id, job_id)
+order by 1;
+-- GROUPING
+-- ROLLUP이나 CUBE에 의한 집계 산출물이
+-- 인자로 전달받은 컬럼 집합의 산출물이면 0 반환 아니면 1 반환
+select department_id, job_id, sum(salary),
+        case when grouping (department_id) = 0 and grouping(job_id) = 1 then '부서별 합계'
+               when grouping (department_id) = 1 and grouping(job_id) = 0 then '직급별 합계'
+               when grouping (department_id) = 1 and grouping(job_id) = 1 then '총 합계'
+               else '그룹별 합계'
+        end as 구분
+from employees
+group by cube(department_id, job_id)
+order by 1;
+
+-- 6. GROUPING SETS 절
+-- GROUPING SETS은 ROLLUP이나 CUBE 처럼 GROUP BY 절에 명시해서 그룹 쿼리에 사용되는 절이다.
+-- GROUPING SETS은 그룹 쿼리이긴 하나 UNION ALL 개념이 섞여 있기 때문이다.
+
+select department_id, job_id, count(*), sum(salary)
+from employees
+group by department_id, job_id
+order by department_id;
+
+select department_id, job_id, count(*), sum(salary)
+from employees
+group by grouping sets(department_id, job_id)
+order by department_id;
+
+-- RANK()  : 중복 순위 개수만큼 다음 순위 값을 증가 시킴
+-- 형식 : RANK() OVER(ORDER BY 컬럼명 (ASC|DESC)) (AS 별칭)
+-- DENSE_RANK() : 중복 순위가 존재해도 순차적으로 다음 순위 값을 표시함 
+-- ROW_NUMBER() : 중복값에 관계없이 SEQUENCE(순차적인 순위 값) 값을 반환
+
+-- 사원테이블에서 80번 부서에 소속된 사원 중에서 급여를 가장 많이 받는 순으로
+-- 사원번호, 사원명, 급여, 순위를 부여하여 출력해 주세요.
+
+select employee_id as 사원번호, first_name as 사원명, hire_date as 입사일자,
+         rank() over(order by hire_date desc) as 순위
+from employees
+where department_id = 80;
+
+select employee_id as 사원번호, first_name as 사원명, salary as 급여,
+         dense_rank() over(order by salary desc) as 순위
+from employees
+where department_id = 80;
+
+select employee_id as 사원번호, first_name as 사원명, salary as 급여,
+        row_number() over(order by salary desc) as 순위
+from employees
+where department_id = 80;
+
+create table exp_goods_asia (   -- 한국과 일본의 10대 수출품 테이블
+    country VARCHAR2(10),       -- 나라명
+    seq       NUMBER,               -- 번호
+    goods   VARCHAR2(80)       -- 상품명
+);
+
+INSERT INTO exp_goods_asia VALUES ('한국', 1, '원유제외 석유류');
+INSERT INTO exp_goods_asia VALUES ('한국', 2, '자동차');
+INSERT INTO exp_goods_asia VALUES ('한국', 3, '전자집적회로');
+INSERT INTO exp_goods_asia VALUES ('한국', 4, '선박');
+INSERT INTO exp_goods_asia VALUES ('한국', 5,  'LCD');
+INSERT INTO exp_goods_asia VALUES ('한국', 6,  '자동차부품');
+INSERT INTO exp_goods_asia VALUES ('한국', 7,  '휴대전화');
+INSERT INTO exp_goods_asia VALUES ('한국', 8,  '환식탄화수소');
+INSERT INTO exp_goods_asia VALUES ('한국', 9,  '무선송신기 디스플레이 부속품');
+INSERT INTO exp_goods_asia VALUES ('한국', 10,  '철 또는 비합금강');
+INSERT INTO exp_goods_asia VALUES ('일본', 1, '자동차');
+INSERT INTO exp_goods_asia VALUES ('일본', 2, '자동차부품');
+INSERT INTO exp_goods_asia VALUES ('일본', 3, '전자집적회로');
+INSERT INTO exp_goods_asia VALUES ('일본', 4, '선박');
+INSERT INTO exp_goods_asia VALUES ('일본', 5, '반도체웨이퍼');
+INSERT INTO exp_goods_asia VALUES ('일본', 6, '화물차');
+INSERT INTO exp_goods_asia VALUES ('일본', 7, '원유제외 석유류');
+INSERT INTO exp_goods_asia VALUES ('일본', 8, '건설기계');
+INSERT INTO exp_goods_asia VALUES ('일본', 9, '다이오드, 트랜지스터');
+INSERT INTO exp_goods_asia VALUES ('일본', 10, '기계류');
+    
+select goods from exp_goods_asia
+where country = '한국'
+union
+select goods from exp_goods_asia
+where country = '일본';
+
+select employee_id, job_id
+from employees
+union
+select employee_id, job_id
+from job_history
+order by 1;
+
+select employee_id, job_id, null as "Start Date", null as "End Date"
+from employees
+where employee_id = 176
+union
+select employee_id, job_id, start_date, end_date
+from job_history
+where employee_id = 176;
+
+-- 2. union all
+-- union all 은 중복된 항목도 모두 조회된다는 점
+
+-- 3. INTERSECT
+-- INTERSECT는 합집합이 아닌 교집합의 의미. 즉, 데이터 집합에서 공통된 항목만 추출
+select goods
+from exp_goods_asia
+where country = '한국'
+intersect
+select goods
+from exp_goods_asia
+where country = '일본';
+
+--
+select goods
+from exp_goods_asia
+where country = '한국'
+minus
+select goods
+from exp_goods_asia
+where country = '일본';
+
+-- 5. 집합 연산자의 제한사항
+-- 집합 연산자로 연결되는 각 select 문의 welect 리스트의 개수와 데이터 타입은 일치해야 한다.
+-- ORA-01789: 질의 블록은 부정확한 수의 결과 열을 가지고 있습니다.
+select goods
+from exp_goods_asia
+where country = '한국'
+union
+select seq, goods
+from exp_goods_asia
+where country = '일본';
+
+-- ORA-01790: 대응하는 식과 같은 데이터 유형이어야 합니다
+select seq
+from exp_goods_asia
+where country = '한국'
+union
+select goods
+from exp_goods_asia
+where country = '일본';
+
+-- 집합 연산자로 select문을 연결할 때 order by 절은 맨 마지막 문장에서만 사용할 수 있다.
+-- ORA-00933: SQL 명령어가 올바르게 종료되지 않았습니다
+select goods
+from exp_goods_asia
+where country = '한국'
+order by goods
+union
+select goods
+from exp_goods_asia
+where country = '일본';
+
+--  정상 쿼리문
+select goods
+from exp_goods_asia
+where country = '한국'
+union
+select goods
+from exp_goods_asia
+where country = '일본'
+order by goods;
 
 
 
+-- Susan 사원이 소속된 부서명
+select e.employee_id, d.department_name, first_name
+from employees e inner join departments d
+on e.department_id = d.department_id
+where first_name = 'Susan';
+
+-- 서브쿼리 작성 전 코드
+-- 조인을 사용하지 않는다는 가정하에 Susan 사원이 소속된 부서명을 출력
+-- [순서]
+-- 1. Susan 사원이 소속된 부서번호 확인 => 사원테이블(EMPLOYEES)
+-- 2. 부서번호를 가지고 부서명 확인       => 부서테이블(DEPARTMENTS)
+select department_id from employees
+where first_name ='Susan';
+
+select department_name from departments
+where department_id = 40;
+
+-- 서브쿼리
+select department_name from departments
+where department_id = (select department_id from employees
+where first_name = 'Susan');
 
 
+-- Lex와 같은 부서에 있는 모든 사원의 이름과 입사일자(2003-01-13 형식) 출력
+-- Lex 사원이 소속된 부서번호 출력
+select department_id
+from employees
+where first_name ='Lex';
+-- 그 부서에 소속된 동료
+select first_name, to_char(hire_date, 'YYYY-MM-DD')
+from employees
+where department_id = 90;
 
+select first_name, to_char(hire_date, 'YYYY-MM-DD') from employees
+where department_id 
+= (select department_id from employees where first_name ='Lex');
 
+-- <문제> EMPLOYEES 테이블에서 CEO에게 보고하는 직원의 모든 정보를 출력.
+select * from employees where manager_id
+= (select employee_id from employees
+    where manager_id IS NULL);
 
+-- Guy와 같은 부서에서 근무하는 사원번호, 이름, 급여, 커미션(NULL이면 0으로 대체),
+-- 입사일(2002.12.07)를 출력하되 Guy 사원은 제외.
+select employee_id, first_name, salary, nvl(commission_pct, 0) commission_pct, to_char(hire_date, 'YYYY.MM.DD') from employees
+where department_id = (
+select department_id from employees where first_name = 'Guy') 
+and first_name <> 'Guy';
+
+-- 서브 쿼리를 사용하여 평균 급여보다 더 많은 급여를 받는 사원을 검색
+select first_name, salary from employees
+where salary > (select avg(salary) from employees);
+
+-- 단일 행 서브쿼리 예제
+-- 문제1) EMPLOYEES 테이블에서 LAST_NAME 컬럼에서 Kochhar의 급여보다 많은
+-- 사원의 정보를 사원번호, 이름, 담당업무, 급여를 출력
+select employee_id, first_name, job_id, salary from employees
+where salary > (select salary from employees where last_name = 'Kochhar');
+
+-- 문제2) 가장 적은 급여를 받는 사원의 사번, 이름, 급여를 출력
+select employee_id, first_name, salary from employees
+where salary = (select min(salary) from employees);
+
+-- (추가문제) 가장 많은 급여를 받는 사원 이름과 사원의 핸드폰 번호 출력
+select first_name, phone_number from employees
+where salary = (select max(salary) from employees);
+
+-- 문제3) 가장 오랜 기간 근무한 사원의 이름과 이메일, 담당업무, 입사일 출력
+select first_name, email, job_id, hire_date from employees
+where hire_date =
+(select min(hire_date) from employees);
+
+--[그룹 합수 예제]
+-- 1. EMPLOYEES 테이블에서 부서 인원이 5명보다 많은 부서의 부서번호, 인원수, 급여의 합 출력
+select department_id 부서번호, count(*) 인원수, sum(salary) 급여
+from employees
+group by department_id
+having count(department_id) > 5
+order by department_id;
+
+-- 2. EMPLOYEES 테이블을 사용하여 사원 중에서 급여(SALARY)와 보너스를 합친 금액이 가장 많은 경우와 가장 작은 경우, 평균 금액을 출력
+-- 보너스가 없을 경우 보너스를 0으로, 출력 금액은 모두 소수점 첫재 짜리까지만.
+select
+    round ( max (salary + (salary * nvl(commission_pct, 0))) , 1) max,
+    round ( min (salary + (salary * nvl(commission_pct, 0))) , 1) min,
+    round ( avg (salary + (salary * nvl(commission_pct, 0))) , 1) avg
+from employees;
+
+-- 3. EMPLOYEES 테이블에서 부서번호가 10인 사원수부터 부서번호가 50인 사원수까지를 각각 출력하라.
+
+select
+ count(decode(department_id, 10, 1)) "10번부서인원수",
+ count(decode(department_id, 20, 1)) "20번부서인원수",
+ count(decode(department_id, 30, 1)) "30번부서인원수", 
+ count(decode(department_id, 40, 1)) "40번부서인원수",
+ count(decode(department_id, 50, 1)) "50번부서인원수"
+from employees;
+
+--4. 사원들의 업무별 전체 급여 평균이 $10,000보다 큰 경우를 조회하여 업무, 급여 평균을 출력하시오. 
+--업무에 CLERK이 포함된 경우는 제외하고 전체 급여 평균이 높은 순서대로 출력하시오.
+select job_id, avg(salary) 급여평균 from employees
+group by job_id
+having job_id NOT LIKE '%CLERK%'
+order by 급여평균 desc;
+
+-- 5. EMPLOYEES 테이블에서 아래의 결과를 출력
+select to_char(hire_date, 'YYYY') as "H_YEAR", count(*) as 사원수, min(salary) as 최소급여, max(salary) as 최대급여, round(avg(salary), 2) as 급여평균, sum(salary) as "급여의 합"
+from employees
+group by to_char(hire_date, 'YYYY')
+order by 1;
+
+-- 6. 각 부서 별 평균 급여가 10000 이상이면 초과, 그렇지 않으면 미만을 출력하라. 단 부서번호가 없는 사원은 제외
+select department_id, floor(avg(salary)) 부서별평균급여,
+    case when avg(salary) >= 10000 then '초과'
+           else '미만'
+    end 평균급여
+from employees
+group by department_id
+having department_id IS NOT NULL
+order by 1;
+
+-- 7. EMPLOYEES 테이블에서 아래의 결과를 출력.
+select
+    count(*) total,
+    count(
+        decode(
+            to_number(to_char(hire_date, 'YYYY'), '9999'), 2001, 1)) '2001년도' from employees;
+            

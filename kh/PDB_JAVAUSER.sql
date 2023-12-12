@@ -36,7 +36,7 @@ insert into student values(3, '98040001', '공지영', 'gonji', 'pw3', '04', '98120
 insert into student values(4, '02050001', '조수영', 'water', 'pw4', '05', '921201','01012340004','대전광역시 중구 은행동','email_4', sysdate);
 insert into student values(5, '94040002', '최경란', 'novel', 'pw5', '04', '941201','01012340005','경기도 수원시 장안구 이목동','email_5', sysdate);
 insert into student values(6, '08020001', '안익태', 'korea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
-
+select * from student;
 create table lesson (
     no number primary key,
     l_abbre char(2) unique not null,
@@ -68,25 +68,59 @@ insert into trainee values (2, '95010002', 'P', 'major', sysdate);
 -- [추가예제]
 
 -- 1. 학번, 학생명과 학과번호, 학과명을 출력하시오.
-select
-    sd_num, sd_name, sd.s_num, s_name
-from
-    student sd inner join subject s
-on
-    sd.s_num = s.s_num;
+select sd_num, sd_name, sd.s_num, s_name
+from student sd inner join subject s
+on sd.s_num = s.s_num;
+
+--강사님 답
+select sd_num 학번, sd_name 학생명, st.s_num 학과번호, s_name 학과명
+from subject sb inner join student st
+on sb.s_num = st.s_num;
     
 -- 2. 우리 학교 전체 학과명과 그 학과에 소속된 학생명, 아이디를 출력하시오.
-select
-    s.s_name, sd_name, sd_id
-from
-    subject s left outer join student sd
+select s.s_name, sd_name, sd_id
+from subject s left outer join student sd
 on s.s_num = sd.s_num;
 
+--강사님 답
+select sb.s_num, s_name 학과명, sd_name 학생명, sd_id 아이디
+from subject sb left outer join student st
+on sb.s_num = st.s_num
+order by sb.s_num;
+
 -- 3.수강 테이블(trainee)에서 수강 신청한 학생명, 과목명, 등록일(2018.12.28 형태)을 출력하도록 쿼리문 작성해 주세요.
-select
-    sd.sd_name, sd.sd_name, to_char(t_date, 'YYYY.MM.DD') t_date
-from
-    student sd inner join trainee t
-on
-    sd.sd_num = t.sd_num
-;
+--오라클 문법
+select sd_name 학생명, l_name 과목명, to_char(t_date, 'YYYY.MM.DD') 수강신청일
+from trainee tr, student st, lesson le
+where tr.sd_num = st.sd_num and tr.l_abbre = le.l_abbre;
+
+--일반 답
+select sd_name 학생명, l_name 과목명, to_char(t_date, 'YYYY.MM.DD') 수강신청일
+from trainee tr inner join student st on tr.sd_num = st.sd_num
+                     inner join lesson le on tr.l_abbre = le.l_abbre;
+                     
+-- 추가 : 학과정보도 출력
+select s_name 학과명, sd_name 학생명, l_name 과목명, to_char(t_date, 'YYYY.MM.DD') 수강신청일
+from subject su inner join student st on su.s_num = st.s_num
+                       inner join trainee tr on tr.sd_num = st.sd_num
+                       inner join lesson le on tr.l_abbre = le.l_abbre;
+
+-- 4. 학과에 소속된 학생 수를 출력하도록 쿼리문 작성
+select s_name 학과명, count(sd_num) 학생수
+from subject sb inner join student st
+on sb.s_num = st.s_num
+group by s_name, sb.s_num
+order by sb.s_num;
+
+-- 5. 전체 학과명을 출력하고 그 학과에 소속된 학생 수를 출력하도록 쿼리문 작성
+select s.s_name, count(sd.sd_name)
+from subject s left outer join student sd
+on s.s_num = sd.s_num
+group by s.s_name;
+
+--강사님 답
+select s_name 학과명, count(sd_num) 학생수
+from subject sb left outer join student st
+on sb.s_num = st.s_num
+group by s_name, sb.s_num
+order by sb.s_num;
