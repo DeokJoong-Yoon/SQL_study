@@ -2315,8 +2315,195 @@ order by 1;
 
 -- 7. EMPLOYEES 테이블에서 아래의 결과를 출력.
 select
-    count(*) total,
-    count(
-        decode(
-            to_number(to_char(hire_date, 'YYYY'), '9999'), 2001, 1)) '2001년도' from employees;
-            
+    count(*) as total,
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2001, 1)) as "2001년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2002, 1)) as "2002년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2003, 1)) as "2003년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2004, 1)) as "2004년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2005, 1)) as "2005년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2006, 1)) as "2006년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2007, 1)) as "2007년도",
+    count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2008, 1)) as "2008년도"
+from employees;
+
+-- 8. EMPLOYEES 테이블에서 아래의 결과를 출력.
+--    sum(decode(department_id, 10,  salary)) as "DEPTNO 10",
+SELECT
+  job_id,
+  nvl(MAX(CASE WHEN department_id = 10 THEN salary END), 0) AS "DEPTNO 10",
+  nvl(MAX(CASE WHEN department_id = 20 THEN salary END), 0) AS "DEPTNO 20",
+  nvl(MAX(CASE WHEN department_id = 30 THEN salary END), 0) AS "DEPTNO 30",
+  nvl(MAX(CASE WHEN department_id = 40 THEN salary END), 0) AS "DEPTNO 40",
+  nvl(MAX(CASE WHEN department_id = 50 THEN salary END), 0) AS "DEPTNO 50",
+  nvl(MAX(CASE WHEN department_id = 60 THEN salary END), 0) AS "DEPTNO 60",
+  nvl(MAX(CASE WHEN department_id = 70 THEN salary END), 0) AS "DEPTNO 70",
+  nvl(MAX(CASE WHEN department_id = 80 THEN salary END), 0) AS "DEPTNO 80",
+  nvl(MAX(CASE WHEN department_id = 90 THEN salary END), 0) AS "DEPTNO 90",
+  nvl(MAX(CASE WHEN department_id = 100 THEN salary END), 0) AS "DEPTNO 100",
+  nvl(MAX(CASE WHEN department_id = 110 THEN salary END), 0) AS "DEPTNO 110",
+FROM employees e
+GROUP BY job_id;
+
+-- 다중 행 서브쿼리 예제
+-- 급여를 15000이상 받는 사원이 소속된 부서와 동일한 부서에서 근무하는 사원ㅇ르 출력
+-- 서브쿼리의 결과 중에서 하나라도 일치하면 참인 결과를 구하는 IN연산자와 함께 사용
+select first_name, salary, department_id from employees
+where department_id in (select distinct department_id from employees where salary >= 5000)
+order by department_id;
+
+-- EMPLOYEES 테이블에서 이름에 "z"가 있는 직원이 근무하는 부서에서
+-- 근무하는 모든 사원에 대한 사원 번호, 이름, 급여를 출력하는 SELECT문을 작성하시오.
+-- 단, 부서번호순으로 출력
+select employee_id, first_name, salary from employees
+where department_id in (select distinct department_id from employees where lower(first_name) LIKE '%z%')
+order by department_id;
+
+-- EMPLOYEES 테이블에섯 Susan 또는 Lex와 월급이 같은 직원의 이름, 업무, 급여를 출력. (Susan, Lex는 제외)
+select first_name, job_id, salary
+from employees
+where salary in (select distinct salary from employees where first_name = 'Susan' or first_name = 'Lex')
+and (first_name <> 'Susan' and first_name <> 'Lex');
+
+-- EMPLOYEES 테이블에서 적어도 한 명 이상으로부터 보고를 받는
+-- 사원의 사원번호, 이름, 업무, 부서번호를 출력하는 SELECT문을 작성 (다른 직원을 관리하는 직원)
+select employee_id, first_name, job_id, department_id from employees
+where employee_id in (select manager_id from employees where manager_id IS NOT NULL);
+
+-- [문제] EMPLOYEES 테이블에서 Accounting 부서에서 근무하는 직원과 같은 업무를 하는
+-- 직원의 이름, 업무명을 출력.
+select e.first_name, e.job_id, department_id
+from employees e join jobs j
+on e.job_id = j.job_id
+where e.department_id
+in (select distinct department_id from departments where department_name = 'Accounting');
+
+--강사님 답
+select first_name, job_id, department_id from employees
+where job_id
+in (select job_id from employees where department_id 
+= (select department_id from departments where department_name = 'Accounting'));
+
+-- 30번 소속 직원들 중에서 급여를 가장 많이 받은 사원 보다 더 많은 급여를
+-- 받는 사람의 이름, 급여 를 출력.( 30번 부서 직원 급여들 모두에 대해서 커야 하므로 최대값보다 큰 급여만)
+select first_name, salary from employees
+where salary > all (select salary from employees where department_id = 30);
+
+-- 부서번호가 110번인 사원들의 급여 중 가장 작은 값(8300)보다 많은 급여를 받는 사원의 이름, 급여 출력
+select first_name, salary from employees
+where salary > any (select salary from employees where department_id = 110);
+
+--[문제] 직급이 'ST_MAN'인 직원이 받는 급여들의 최소 급여보다 많이 받는 직원들의
+--이름과 급여를 출력하되 부서번호가 20번인 직원은 제외
+ select first_name, salary, job_id from employees
+ where salary > any (select salary from employees where job_id = 'ST_MAN')
+ and department_id <> 20;
+ 
+
+-- EXISTS 연산자
+-- EXISTS 연산자는 서브 쿼리문에서 주로 사용하며 서브 쿼리의 결과 값이 참이 나오기만 하면
+-- 바로 메인 쿼리의 결과 값을 리턴
+
+-- JOB 변뎡 이력이 있는 모든 사원의 사원번호, FIST_NAME, 현재 JOB_ID, 현재 JOB_TITLE를 출력하시오 (exists
+-- 테이블 확인
+select * from jobs;
+select * from job_history;
+
+select employee_id, first_name, e.job_id, job_title
+from employees e inner join jobs j on e.job_id = j.job_id
+where exists (select * from job_history where e.employee_id = employee_id)
+order by e.employee_id;
+
+-- 사원명과 그 사원이 소속된 부서명을 조회. - JOIN 방법으로 명시
+select first_name, department_name
+from employees e inner join departments d
+on d.department_id = e.department_id;
+
+-- 스칼라 서브쿼리
+-- : 스칼라 서브 쿼리는 SELECT 절에 오는 서브 쿼리로 한번에 결과를 1행씩 반환한다.
+-- (형식)
+-- SELECT 컬럼,  (SELECT 컬럼 FROM 테이블1 WHERE 테이블1.컬럼 = 테이블2.컬럼)
+-- FROM 테이블2;
+
+-- 사원명과 그 사원이 소속된 부서명을 조회. - 스칼라 서브 쿼리 방법으로 명시
+select first_name, (select department_name from departments d where d.department_id = e.department_id) deparment_name
+from employees e;
+
+-- 모든 사원의 사원번호, 이름, 관리자번호, 관리자명을 조회해 봅시다.
+select employee_id, first_name,
+nvl((select m.first_name from employees m where m.employee_id = e.manager_id), '없음') as 관리자명
+from employees e
+order by 1;
+
+-- EMPLOYEES 테이블에서 급여가 자신이 속한 부서의 평균 급여보다 많이 받은 사원의 부서번호, 이름, 급여를 출력
+select e.department_id, first_name, e.salary
+from employees e
+where e.salary > (select avg(salary) from employees d where d.department_id = e.department_id)
+order by e.department_id, e.salary desc;
+
+--[문제] EMPLOYEES 테이블에서 Valli 라는 이름을 가진 직원과 업무명  및 월급이
+--같은 사원의 모든 정보를 출력 (Valli는 제외)
+select * from employees e
+where
+    (e.job_id = (select d.job_id from employees d where first_name = 'Valli'))
+and
+    (e.salary = (select d.salary from employees d where first_name = 'Valli'))
+and first_name <> 'Valli';
+
+select * from employees
+where (job_id, salary) in (select job_id, salary from employees where first_name = 'Valli')
+and NOT first_name = 'Valli';
+
+
+--[문제]
+-- 1. EMPLOYEES 테이블에서 가장 많은 사원이 속해있는 부서번호와 사원수를 출력하라.
+select department_id, count(*) as 사원수
+from employees
+group by department_id
+order by 사원수 desc
+FETCH FIRST 1 row Only;
+
+select department_id, count(*) as 사원수
+from employees
+group by department_id
+having count(*) = 
+(select max(count(*)) from employees group by department_id);
+
+--[오라클] 서브쿼리 예제
+--1. EMPLOYEES 테이블에서 가장 많은 사원이 속해있는 부서번호와 사원수 출력
+select department_id, count(*) as 사원
+from employees
+group by department_id
+having count(*) = 
+(select max(count(*)) from employees group by department_id);
+
+-- 2. EMPLOYEES 테이블에서 부서별 최고 급여를 받는 / 직원의 이름, 직급, 부서, 급여를 출력
+select department_id,  from employees e
+group by department_id
+having max(salary) = (select max(salary) from employees group by department_id);
+
+
+
+
+
+
+
+
+
+
+
+-- sequence
+create table test (
+    no number not null
+);
+
+create sequence test_seq
+start with 1
+increment by 1
+minvalue 1
+maxvalue 100000
+nocycle
+cache 2;
+
+insert into test values(test_seq.nextval);
+select * from test;
+select test_seq.currval from dual;

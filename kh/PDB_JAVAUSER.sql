@@ -11,8 +11,26 @@ Insert into subject(no, s_num, s_name) values (2, '02', '교육학과');
 Insert into subject(no, s_num, s_name) values (3, '03', '신문방송학과');
 Insert into subject(no, s_num, s_name) values (4, '04', '인터넷비즈니스과');
 Insert into subject(no, s_num, s_name) values (5, '05', '기술경영과');
-select * from subject order by no;
 
+-- 일련번호를 쿼리문으로 구해 학과 데이터를 입력
+insert into subject(no, s_num, s_name) values ((select max(no) + 1 from subject), '06', '통계학과');
+
+-- 학과테이블에 일련번호(no)를 시퀀스에 의해 저장되도록 시퀀스 생성
+CREATE SEQUENCE subject_seq
+START WITH 7
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 999999
+NOCYCLE
+CACHE 2;
+-- DROP SEQUNCE subject_seq;
+-- SELECT subject_seq.nextval FROM dual;
+
+insert into subject(no, s_num, s_name) values(subject_seq.nextval, '07', '역사학과');
+insert into subject(no, s_num, s_name) values(subject_seq.nextval, '08', '인문학과');
+
+
+select * from subject order by no;
 create table student (
     no number not null,
     sd_num char(8 char) not null,
@@ -36,7 +54,19 @@ insert into student values(3, '98040001', '공지영', 'gonji', 'pw3', '04', '98120
 insert into student values(4, '02050001', '조수영', 'water', 'pw4', '05', '921201','01012340004','대전광역시 중구 은행동','email_4', sysdate);
 insert into student values(5, '94040002', '최경란', 'novel', 'pw5', '04', '941201','01012340005','경기도 수원시 장안구 이목동','email_5', sysdate);
 insert into student values(6, '08020001', '안익태', 'korea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
+-- 학생테이블에 일련번호(no)를 시퀀스에 의해 저장되도록 시퀀스 생성
+create sequence student_seq
+start with 7
+increment by 1
+minvalue 1
+maxvalue 999999
+nocycle
+cache 2;
+insert into student values(student_seq.nextval, '08020301', '안익태', 'korea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
+insert into student values(student_seq.nextval, '58020001', '안익태', 'korea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
 select * from student;
+
+
 create table lesson (
     no number primary key,
     l_abbre char(2) unique not null,
@@ -49,6 +79,16 @@ insert into lesson values(4, 'H', '역사');
 insert into lesson values(5, 'P', '프로그래밍');
 insert into lesson values(6, 'D', '데이터베이스');
 insert into lesson values(7, 'ED', '교육학이론');
+create sequence lesson_seq
+start with 8
+increment by 1
+minvalue 1
+maxvalue 999999
+nocycle
+cache 2;
+insert into lesson values(lesson_seq.nextval, 'J', '자바');
+insert into lesson values(lesson_seq.nextval, 'C', 'C언어');
+select * from lesson;
 
 create table trainee (
     no number primary key,
@@ -61,7 +101,17 @@ create table trainee (
 );
 insert into trainee values (1, '06010001', 'K', 'culture', sysdate);
 insert into trainee values (2, '95010002', 'P', 'major', sysdate);
+create sequence trainee_seq
+start with 3
+increment by 1
+minvalue 1
+maxvalue 999999
+nocycle
+cache 2;
 
+insert into trainee values (trainee_seq.nextval, '95010002', 'P', 'major', sysdate);
+insert into trainee values (trainee_seq.nextval, '95010002', 'P', 'major', sysdate);
+select * from trainee;
 
 --20231211
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -124,3 +174,33 @@ from subject sb left outer join student st
 on sb.s_num = st.s_num
 group by s_name, sb.s_num
 order by sb.s_num;
+
+-- 각 사원과 직속 상사와의 관계를 이용하여 다음과 같은 형식의 보고서를 작
+
+
+-- Java 연동하여 사용할 테이블 생성
+-- books 테이블 생성
+create table books (
+    book_id number,
+    title varchar2(80) not null,
+    publisher varchar2(60) not null,
+    year varchar2(4) not null,
+    price number not null,
+    constraint books_pk primary key(book_id)
+);
+-- book_seq 시퀀스 생성
+create sequence books_seq
+start with 1
+increment by 1
+maxvalue 9999999
+minvalue 1
+nocycle
+nocache;
+
+--books 테이블에 5개의 책정보를 입력해 주세요.
+insert into books values(books_seq.nextval, '존재의 기술', '뿌리출판', '2000', '50000');
+insert into books values(books_seq.nextval, '존재의 의미', '뿌리출판', '2001', '51000');
+insert into books values(books_seq.nextval, '존재의 평가', '뿌리출판', '2002', '52000');
+insert into books values(books_seq.nextval, '존재의 혜안', '뿌리출판', '2003', '53000');
+insert into books values(books_seq.nextval, '존재의 존재', '뿌리출판', '2004', '54000');
+select * from books;
