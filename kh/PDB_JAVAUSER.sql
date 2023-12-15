@@ -203,4 +203,5 @@ insert into books values(books_seq.nextval, '존재의 의미', '뿌리출판', '2001', '
 insert into books values(books_seq.nextval, '존재의 평가', '뿌리출판', '2002', '52000');
 insert into books values(books_seq.nextval, '존재의 혜안', '뿌리출판', '2003', '53000');
 insert into books values(books_seq.nextval, '존재의 존재', '뿌리출판', '2004', '54000');
+
 select * from books;

@@ -2326,6 +2326,17 @@ select
     count(decode(to_number(to_char(hire_date,'YYYY'), '9999'), 2008, 1)) as "2008년도"
 from employees;
 
+select count(*) "total",
+       count(case when to_char(hire_date, 'YYYY')='2001' then 1 end) as "2001 년도",
+       count(case when to_char(hire_date, 'YYYY')='2002' then 1 end) as "2002 년도",
+       count(case when to_char(hire_date, 'YYYY')='2003' then 1 end) as "2003 년도",
+       count(case when to_char(hire_date, 'YYYY')='2004' then 1 end) as "2004 년도",
+       count(case when to_char(hire_date, 'YYYY')='2005' then 1 end) as "2005 년도",
+       count(case when to_char(hire_date, 'YYYY')='2006' then 1 end) as "2006 년도",
+       count(case when to_char(hire_date, 'YYYY')='2007' then 1 end) as "2007 년도",
+       count(case when to_char(hire_date, 'YYYY')='2008' then 1 end) as "2008 년도"
+from employees;
+
 -- 8. EMPLOYEES 테이블에서 아래의 결과를 출력.
 --    sum(decode(department_id, 10,  salary)) as "DEPTNO 10",
 SELECT
@@ -2341,8 +2352,25 @@ SELECT
   nvl(MAX(CASE WHEN department_id = 90 THEN salary END), 0) AS "DEPTNO 90",
   nvl(MAX(CASE WHEN department_id = 100 THEN salary END), 0) AS "DEPTNO 100",
   nvl(MAX(CASE WHEN department_id = 110 THEN salary END), 0) AS "DEPTNO 110",
+  sum(salary) "TOTAL"
 FROM employees e
 GROUP BY job_id;
+
+select job_id,
+        sum(decode(department_id, 10, salary,0)) "DEPTNO 10",
+        sum(decode(department_id, 20, salary,0)) "DEPTNO 20",
+        sum(decode(department_id, 30, salary,0)) "DEPTNO 30",
+        sum(decode(department_id, 40, salary,0)) "DEPTNO 40",
+        sum(decode(department_id, 50, salary,0)) "DEPTNO 50",
+        sum(decode(department_id, 60, salary,0)) "DEPTNO 60",
+        sum(decode(department_id, 70, salary,0)) "DEPTNO 70",
+        sum(decode(department_id, 80, salary,0)) "DEPTNO 80",
+        sum(decode(department_id, 90, salary,0)) "DEPTNO 90",
+        sum(decode(department_id, 100, salary,0)) "DEPTNO 100",
+        sum(decode(department_id, 110, salary,0)) "DEPTNO 110",
+        sum(salary) "TOTAL"
+from employees
+group by job_id;
 
 -- 다중 행 서브쿼리 예제
 -- 급여를 15000이상 받는 사원이 소속된 부서와 동일한 부서에서 근무하는 사원ㅇ르 출력
@@ -2456,17 +2484,26 @@ and NOT first_name = 'Valli';
 
 --[문제]
 -- 1. EMPLOYEES 테이블에서 가장 많은 사원이 속해있는 부서번호와 사원수를 출력하라.
-select department_id, count(*) as 사원수
+select department_id 부서번호, count(*) as 사원수
 from employees
 group by department_id
 order by 사원수 desc
 FETCH FIRST 1 row Only;
 
-select department_id, count(*) as 사원수
+select department_id 부서번호, count(*) as 사원수
 from employees
 group by department_id
 having count(*) = 
 (select max(count(*)) from employees group by department_id);
+
+-- 2. EMPLOYEES 테이블에서 부서별 최고 급여를 받는 직원의 이름, 직급, 부서, 급여를 출력
+select first_name, job_id, department_id, salary
+from employees
+where (department_id, salary) in (select department_id, max(salary) 
+                                          from employees
+                                          group by department_id)
+order by 3;
+
 
 --[오라클] 서브쿼리 예제
 --1. EMPLOYEES 테이블에서 가장 많은 사원이 속해있는 부서번호와 사원수 출력
@@ -2477,11 +2514,15 @@ having count(*) =
 (select max(count(*)) from employees group by department_id);
 
 -- 2. EMPLOYEES 테이블에서 부서별 최고 급여를 받는 / 직원의 이름, 직급, 부서, 급여를 출력
-select department_id,  from employees e
-group by department_id
-having max(salary) = (select max(salary) from employees group by department_id);
+
+-- 3. EMPLOYEES 테이블에서 각 부서별 입사일이 가장 오래된 사원의 사원번호, 사원명, 부서번호, 입사일을 출력
+SELECT employee_id, first_name, department_id, hire_date
+FROM (SELECT row_number() over(partition by department_id order by hire_date asc) as rnum,
+employee_id, first_name, department_id, hire_date FROM employees) data
+where data.rnum = 1;
 
 
+--
 
 
 
@@ -2503,7 +2544,174 @@ minvalue 1
 maxvalue 100000
 nocycle
 cache 2;
-
+select * from employees;
 insert into test values(test_seq.nextval);
 select * from test;
 select test_seq.currval from dual;
+
+
+-----view-----------------------------------------------
+----------------------------------------------------
+-- 인라인 뷰
+
+select rownum, employee_id, first_name ,hire_date
+from employees
+order by hire_date desc;
+
+
+create or replace view view_hire
+as
+select employee_id, first_name, hire_date
+from employees
+order by hire_date desc;
+
+select rownum, employee_id, first_name, hire_date
+from view_hire;
+select * from view_hire;
+
+select rownum, employee_id, first_name, hire_date
+from view_hire
+where rownum <= 5;
+
+select rownum, employee_id, first_name, hire_date
+from 
+(select employee_id, first_name, hire_date
+from employees
+order by hire_date desc)
+where rownum <= 5;
+
+-- 서브쿼리에 이름을 붙여주고 인라인 뷰로 사용시 서브쿼리의 이름으로 FROM 절에 기술 가능
+-- 같은 서브쿼리가 여러 번 사용될 경우 중복 작성을 피할 수 있고 실행속도도 빨라진다는 장점이 있음
+WITH TOPN_HIRE
+AS
+(SELECT employee_id, first_name, hire_date
+FROM employees
+ORDER BY hire_date desc)
+
+SELECT rownum, employee_id, first_name, TO_CHAR(hire_date, 'YYYY.MM.DD')
+FROM topn_hire
+WHERE rownum <= 5;
+
+-- emploees 테이블과 departments 테이블을 조회하여 부서 번호와 부서별 최대 급여 및 부서명을 출력
+select e.department_id, d.department_name, e.salary
+from ( select department_id, max(salary) salary
+          from employees group by department_id ) e inner join departments d
+          on e.department_id = d.department_id;
+          
+--[문제] employees 테이블에서 급여가 자신이 속한 부서의 평균 급여보다 많이 받는
+--사원의 부서번호, 이름, 급여를 출력하는 select 문을 작성하시오
+select e.department_id, e.first_name, e.salary
+from employees e inner join (select department_id, avg(salary) d_salary
+                                          from employees
+                                          group by department_id) d
+on e.department_id = d.department_id
+where e.salary > d.d_salary
+order by e.department_id;
+
+with dept_sal
+as
+(select department_id, avg(salary) d_salary
+from employees
+group by department_id)
+
+select employee_id, first_name, hire_date, rank() over(order by hire_date desc) as 순위
+from employees
+where department_id = 30;
+
+-- 사원테이블에서 30번 부서에 소속된 사원 중에서 입사년도가 가장 최근에 입사한 순부터
+-- 사원번호, 사원명, 입사일자, 순위를 부여하여 출력
+select employee_id as 사원번호, first_name as 사원명, hire_date as 입사일자, 
+rank() over(order by hire_date desc) as 순위
+from employees
+where department_id = 30;
+
+--사원테이블에서 30번 부서에 소속된 사원 중에서 급여를 가장 많이 받는 순으ㄹ
+-- 사원번호, 사원명, 급여, 순위를 부여하여 출력
+select employee_id as 사원번호, first_name as 사원명, salary as 급여,  rank() over(order by salary desc) as 순위
+from employees
+where department_id = 30;
+
+-- 사원테이블에서 급여를 가장받는 순으로 순위를 부여하고 상위 3명만 출력
+select first_name, salary
+from (select first_name, salary,
+         rank() over(order by salary desc) as salary_rank
+         from employees
+         order by salary desc)
+where rownum <= 3;
+--where salary_rank<=3;
+
+select first_name, salary,
+         rank() over(order by salary desc) as salary_rank
+from employees
+where salary_rank <= 3
+order by salary desc;
+
+
+-- DENSE_RANK() OVER
+-- 사원 테이블에서 30번 부서에 소속된 사원 중에서 급여를 가장 많이 받는 순으로
+-- 사원번호, 사원명, 급여, 순위를 부여하여 출력
+select employee_id as 사원번호, first_name as 사원명, salary as 입사일자,
+         dense_rank() over(order by salary desc) as 순위
+from employees
+where department_id=30;
+
+-- ROW NUMBER()
+-- 사원테이블에서 30번 부서에 소속된 사원 중에서 급여를 많이 받는 순으로
+-- 사원번호, 사원명, 급여, 번호를 부여하여 출력
+
+select employee_id as 사원번호, first_name as 사원명, salary as 입사일자,
+         row_number() over(order by salary desc) as 순위
+from employees
+where department_id = 30;
+
+
+-- 오라클에서 그룹함수를 사용할 때 PARTITION BY를 사용하여 그룹으로 묶어서 연산을 할 수 있다.
+-- GROUP BY 절을 사용하지 않고, 조회된 각 행에 그룹으로 집계된 값을 표시할 때
+-- OVER 절과 함께 PARTITION BY 절을 사용하면 된다.
+
+-- 부서별 급여의 합 출력
+select department_id, sum(salary)
+from employees
+where department_id between 10 and 30
+group by department_id
+order by department_id;
+
+-- 부서번호와 사원명, 부서별 급여의 합을 함께 출력
+select department_id, first_name,
+            sum(salary) over(partition by department_id) as salary_total
+from employees
+where department_id between 10 and 30
+order by department_id;
+
+-- 위의 예제를 보면 데이터를 조회한 각 행에 그룹함수로 집계한 값을 추가로 각 행에 표시하며,
+-- 조회된 데이터는 GROUP BY 절을 사용하지 않았기 때문에 데이터가 변형되지 않는다.
+
+--[형식]
+-- 그룹함수([컬럼]) OVER(PARTITION BY 컬럼1, 컬럼2, ... [ORDER BY 절]...)
+
+-- 그룹함수를 사용할 때는 OVER 절을 함께 사용해야 하며,
+-- OVER 절 내부에 PARTITION BY 절을 사용하지 않으면 쿼리 결과 전체를 집계하며
+-- PARTITION BY 절을 사용하면 쿼리 결과에서 해당 컬럼을 그룹으로 묶어서 결과를 표시
+
+SELECT department_id, first_name, salary,
+            sum(salary) over(partition by department_id) as department_total,
+            sum(salary) over() as salary_total
+from employees
+where department_id between 10 and 30
+order by department_id;
+
+-- 각 부서에 소속된 사원 제체가 아니라 각 부서별 한명의 사원만을 출력하고자 한다. 
+--사원명, 직무번호, 급여, 부서번호를 조회
+--먼저, 각 부서별로 번호를 부여
+select employee_id, first_name, job_id, salary, department_id
+         , row_number() over(partition by department_id order by employee_id) as rnum
+from employees
+order by department_id;
+
+select employee_id, first_name, salary, department_id, hire_date
+from (select employee_id, first_name, salary, department_id, hire_date, 
+                  row_number() over(partition by department_id order by employee_id) as rnum
+from employees) data
+where data.rnum = 1
+order by department_id;
+
