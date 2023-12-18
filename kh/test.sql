@@ -1,3 +1,3 @@
-SELECT salary_rank, first_name, salary
-FROM (SELECT first_name, salary, RANK() OVER(ORDER BY salary DESC) salary_rank FROM employees)
-WHERE salary_rank <= 5;
+SELECT constraint_name, constraint_type, table_name
+FROM USER_CONSTRAINTS
+WHERE table_name = 'EMP02';

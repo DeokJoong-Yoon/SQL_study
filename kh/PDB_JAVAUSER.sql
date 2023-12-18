@@ -1,7 +1,7 @@
 create table subject (
     no number not null,
     s_num char(2) not null,
-    s_name varchar2(30) not null
+    s_name varchar2(30) not null,
     constraint subject_no_pk primary key(no),
     constraint subejct_s_num unique(s_num)
 );
@@ -63,7 +63,7 @@ maxvalue 999999
 nocycle
 cache 2;
 insert into student values(student_seq.nextval, '08020301', '안익태', 'korea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
-insert into student values(student_seq.nextval, '58020001', '안익태', 'korea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
+insert into student values(student_seq.nextval, '58020001', '안익태', 'kor2ea', 'pw6', '02', '081201','01012340006','본인의 주소','email_6', sysdate);
 select * from student;
 
 
