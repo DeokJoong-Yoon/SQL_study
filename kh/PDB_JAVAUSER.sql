@@ -15,6 +15,11 @@ Insert into subject(no, s_num, s_name) values (5, '05', '기술경영과');
 -- 일련번호를 쿼리문으로 구해 학과 데이터를 입력
 insert into subject(no, s_num, s_name) values ((select max(no) + 1 from subject), '06', '통계학과');
 
+select nvl (lpad(max(to_number(ltrim(s_num, '0'))) + 1, 2, '0'), '01')
+as subjectNum from subject;
+select * from subject;
+select nvl(lpad(max(s_num) + 1, 2, '0'), '01') as subjectNum from subject;
+
 -- 학과테이블에 일련번호(no)를 시퀀스에 의해 저장되도록 시퀀스 생성
 CREATE SEQUENCE subject_seq
 START WITH 7
@@ -25,10 +30,12 @@ NOCYCLE
 CACHE 2;
 -- DROP SEQUNCE subject_seq;
 -- SELECT subject_seq.nextval FROM dual;
-
+SELECT subject_seq.currval as s_num FROM dual;
 insert into subject(no, s_num, s_name) values(subject_seq.nextval, '07', '역사학과');
 insert into subject(no, s_num, s_name) values(subject_seq.nextval, '08', '인문학과');
+delete from subject where no =18;
 
+SELECT s_num as 학과코드 FROM subject where rownum = 1 order by s_num desc;
 
 select * from subject order by no;
 create table student (

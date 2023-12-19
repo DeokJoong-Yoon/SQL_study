@@ -1,3 +1,4 @@
-SELECT constraint_name, constraint_type, table_name
-FROM USER_CONSTRAINTS
-WHERE table_name = 'EMP02';
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY ROLLUP(department_id, job_id)
+ORDER BY department_id;
