@@ -1,4 +1,2 @@
-SELECT department_id, job_id, COUNT(*), SUM(salary)
-FROM employees
-GROUP BY ROLLUP(department_id, job_id)
-ORDER BY department_id;
+SELECT * FROM employees
+WHERE department_id = (SELECT department_id FROM employees WHERE first_name = 'Guy');

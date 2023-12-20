@@ -55,6 +55,7 @@ create table student (
     constraint student_id_uk unique (sd_id),
     constraint student_s_num_fk foreign key(s_num) references subject(s_num)
 );
+select * from student;
 insert into student values(1, '06010001', '김정수', 'javajsp', 'pw1', '01', '061201','01012340001','서울시 서대문구 창전동','email_1', sysdate);
 insert into student values(2, '95010002', '김수현', 'jdbcmania', 'pw2', '01', '951201','01012340002','서울시 서초구 양재동','email_2', sysdate);
 insert into student values(3, '98040001', '공지영', 'gonji', 'pw3', '04', '981201','01012340003','부산광역시 해운대구 반송동','email_3', sysdate);
@@ -212,3 +213,15 @@ insert into books values(books_seq.nextval, '존재의 혜안', '뿌리출판', '2003', '
 insert into books values(books_seq.nextval, '존재의 존재', '뿌리출판', '2004', '54000');
 
 select * from books;
+
+SELECT FK.owner, FK.constraint_name , FK.table_name
+FROM all_constraints FK, all_constraints PK
+WHERE FK.R_CONSTRAINT_NAME = PK.CONSTRAINT_NAME 
+AND PK.owner = 'JAVAUSER' AND FK.CONSTRAINT_TYPE = 'R' AND PK.TABLE_NAME = 'STUDENT' ORDER BY FK.TABLE_NAME;
+
+
+
+
+desc student;
+desc subject;
+

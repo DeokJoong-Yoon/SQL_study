@@ -375,3 +375,266 @@ BEGIN
 	END LOOP;
 END;
 /
+
+
+DECLARE
+	vfirst_name employees.first_name%TYPE;
+	TYPE employeescursor IS REF CURSOR;     -- 커서 타입 선언
+	vemployees employeescursor;             -- 커서 변수 선언
+BEGIN
+	-- 커서 변수를 사용한 커서 정의 및 오픈
+	OPEN vemployees FOR SELECT first_name FROM employees WHERE department_id = 60;
+
+	-- LOOP문
+	LOOP
+	-- 커서 변수를 사용해 결과 집합을 EMPNAME 변수에 할당
+	FETCH vemployees INTO vfirst_name;
+	EXIT WHEN vemployees%NOTFOUND;
+	DBMS_OUTPUT.PUT_LINE('사원명 : ' || vfirst_name); -- 사원명을 출력
+	END LOOP;
+END;
+/
+
+
+CREATE OR REPLACE PROCEDURE EMPPOC
+IS
+	vword VARCHAR2(1);
+	vemployees employees%ROWTYPE;
+	CURSOR C1 (vword VARCHAR2)
+	IS
+	SELECT employee_id, first_name, salary
+	FROM employees WHERE first_name LIKE '%' || vword ||'%';
+BEGIN
+	vword := DBMS_RANDOM.STRING('U', 1);
+	DBMS_OUTPUT.PUT_LINE('임의의 문자 : ' || vword);
+	OPEN C1(vword);
+	DBMS_OUTPUT.PUT_LINE('사번 / 사원명 / 급여');
+	DBMS_OUTPUT.PUT_LINE('----------------------------');
+	LOOP
+		FETCH C1 INTO vemployees.employee_id, vemployees.first_name, vemployees.salary;
+		IF C1%ROWCOUNT = 0 THEN
+			DBMS_OUTPUT.PUT_LINE('해당 사원이 존재하지 않습니다.');
+		END IF;
+		EXIT WHEN C1%NOTFOUND;
+		DBMS_OUTPUT.PUT_LINE(vemployees.employee_id || '/' || vemployees.first_name || '/' ||
+		vemployees.salary);
+	END LOOP;
+END;
+/
+
+execute emppoc;
+
+select * from user_source;
+
+CREATE OR REPLACE PROCEDURE EMPPROC02 ( vdepartment_id IN employees.department_id%TYPE )
+IS
+	CURSOR C1
+	IS
+	SELECT * FROM employees WHERE department_id = vdepartment_id;
+BEGIN
+	DBMS_OUTPUT.PUT_LINE('사원번호 / 사원명 / 급여');
+	DBMS_OUTPUT.PUT_LINE('----------------------------');
+	FOR vemployees IN C1 LOOP
+		DBMS_OUTPUT.PUT_LINE(vemployees.employee_id || ' / '
+													|| vemployees.first_name || ' / ' || vemployees.salary);
+	END LOOP;
+END;
+/
+SHOW ERROR;
+
+select distinct department_id, first_name from employees;
+
+execute EMPPROC02(40);
+
+CREATE OR REPLACE PROCEDURE EMPPROC_INMODE
+(vdepartment_id IN employees01.department_id%TYPE)
+IS
+BEGIN
+	UPDATE employees01 SET salary = DECODE(vdepartment_id, 10, salary * 1.1, 20, salary * 1.2, salary)
+	WHERE department_id = vdepartment_id;
+	COMMIT;
+	DBMS_OUTPUT.PUT_LINE('수정이 완료되었습니다.');
+END EMPPROC_INMODE;
+/
+SHOW ERRORS;
+
+execute empproc_inmode(20);
+
+
+CREATE TABLE dept01 (
+    deptno NUMBER(2),
+    dname VARCHAR2(30) NOT NULL,
+    LOC VARCHAR2(15) NOT NULL,
+    CONSTRAINT DEPT01_DEPTNO_PK PRIMARY KEY(deptno)
+);
+
+create sequence dept01_seq
+start with 10
+increment by 10
+minvalue 10
+maxvalue 100000
+nocycle
+cache 2;
+
+ALTER TABLE dept01
+ADD(CREDATE DATE DEFAULT SYSDATE);
+
+INSERT INTO dept01(deptno, dname, loc) VALUES (dept01_seq.nextval, '인사과','서울');
+INSERT INTO dept01(deptno, dname, loc) VALUES (dept01_seq.nextval, '총무과','대전');
+INSERT INTO dept01(deptno, dname, loc) VALUES (dept01_seq.nextval, '교육팀','서울');
+INSERT INTO dept01(deptno, dname, loc) VALUES (dept01_seq.nextval, '기술팀','인천');
+INSERT INTO dept01(deptno, dname, loc) VALUES (dept01_seq.nextval, '시설관리팀','광주');
+
+SELECT * FROM dept01;
+
+CREATE OR REPLACE PROCEDURE deptproc_inmode
+(deptno IN dept01.deptno%TYPE,
+ dname IN dept01.dname%TYPE,
+ loc IN dept01.loc%TYPE)
+IS
+BEGIN
+    INSERT INTO dept01 (deptno, dname, loc, credate)
+    VALUES(deptno, dname, loc, SYSDATE);
+    COMMIT;
+END;
+/
+SHOW ERROR;
+
+EXECUTE DEPTPROC_INMODE(60, '기획부', '부산');
+select * from dept01;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('부서번호 / 부서명 / 지역명 / 등록일');
+    DBMS_OUTPUT.PUT_LINE('----------------------------------------------');
+    
+    FOR vdept IN (SELECT * FROM dept01 ORDER BY deptno) LOOP
+        DBMS_OUTPUT.PUT_LINE(vdept.deptno || ' / ' || RPAD(vdept.dname, 10) || ' / '
+                                    || vdept.loc || ' / ' ||TO_CHAR(vdept.credate, 'YYYY-MM-DD'));
+    END LOOP;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE deptproc_inup
+( pdeptno IN dept01.deptno%TYPE,
+  pdname IN dept01.dname%TYPE,
+	ploc IN dept01.loc%TYPE )
+IS
+	cnt NUMBER := 0;
+	vdept dept01%ROWTYPE;
+BEGIN
+	SELECT COUNT(*) INTO cnt FROM dept01 WHERE deptno = pdeptno;
+	IF cnt = 0 THEN
+		INSERT INTO dept01(deptno, dname, loc, credate)
+		VALUES(pdeptno, pdname, ploc, SYSDATE);
+	ELSE
+		UPDATE dept01
+		SET dname = pdname, loc = ploc, credate = sysdate
+		WHERE deptno = pdeptno;
+	END IF;
+	COMMIT;
+
+	DBMS_OUTPUT.PUT_LINE('부서번호 / 부서명 / 지역명 / 등록일');
+	DBMS_OUTPUT.PUT_LINE('------------------------------------');
+	SELECT deptno, dname, loc, credate INTO vdept
+	FROM dept01 WHERE deptno = pdeptno;
+	DBMS_OUTPUT.PUT_LINE(vdept.deptno || ' / ' || RPAD(vdept.dname, 10) || ' / '
+											|| vdept.loc || ' / ' || TO_CHAR(vdept.CREDATE, 'YYYY-MM-DD'));
+END;
+/
+SHOW ERROR;
+EXECUTE deptproc_inup(60, '기획부', '전주');
+
+CREATE OR REPLACE PROCEDURE empproc_outmode(
+	vemployee_id IN employees.employee_id%TYPE,
+	vfirst_name OUT employees.first_name%TYPE,
+	vsalary OUT employees.salary%TYPE,
+	vjob_id OUT employees.job_id%TYPE
+)
+IS
+BEGIN
+	SELECT first_name, salary, job_id INTO vfirst_name, vsalary, vjob_id
+	FROM employees
+	WHERE employee_id = vemployee_id;
+END;
+/
+show error;
+
+DECLARE
+	vemployee employees%ROWTYPE;
+BEGIN
+	empproc_outmode(120, vemployee.first_name, vemployee.salary, vemployee.job_id);
+	DBMS_OUTPUT.PUT_LINE('사원명 : ' || vemployee.first_name);
+	DBMS_OUTPUT.PUT_LINE('급 여 : ' || vemployee.salary);
+	DBMS_OUTPUT.PUT_LINE('직 무 : ' || vemployee.job_id);
+END;
+/
+
+
+CREATE OR REPLACE PROCEDURE dept_data
+(dept_id IN employees.department_id%TYPE,
+ dept_count OUT employees.salary%TYPE,
+ dept_sal_sum OUT employees.salary%TYPE,
+ dept_sal_avg OUT employees.salary%TYPE
+)
+IS
+BEGIN
+	SELECT COUNT(*), SUM(salary), AVG(salary) INTO dept_count, dept_sal_sum, dept_sal_avg
+	FROM employees
+	WHERE department_id = dept_id;
+END;
+/
+show error;
+
+DECLARE
+	dept_cnt NUMBER(10);
+	dept_sum NUMBER(10);
+	dept_avg NUMBER(10);
+BEGIN
+	dept_data(30, dept_cnt, dept_sum, dept_avg);
+	
+	DBMS_OUTPUT.PUT_LINE('부서 사원수 : ' || dept_cnt);
+	DBMS_OUTPUT.PUT_LINE('급여의 합 : ' || dept_sum);
+	DBMS_OUTPUT.PUT_LINE('급여의 평균 : ' || dept_avg);
+END;
+/
+
+
+CREATE OR REPLACE PROCEDURE empproc02_outmode
+(vemployee_id IN employees.employee_id%TYPE,
+ vfirst_name OUT employees.first_name%TYPE,
+ vsalary OUT employees.salary%TYPE,
+ dept_name OUT departments.department_name%TYPE,
+ dept_avg OUT employees.salary%TYPE
+)
+IS
+BEGIN
+	SELECT first_name, salary, department_name, avg 
+    INTO vfirst_name, vsalary, dept_name, dept_avg
+	FROM
+	(SELECT employee_id, e.first_name, e.salary, d.department_name,
+					TRUNC(AVG(e.salary) OVER(PARTITION BY d.department_id)) AS avg
+	FROM employees e INNER JOIN departments d
+	ON e.department_id = d.department_id)
+	WHERE employee_id = vemployee_id;
+END;
+/
+SHOW ERROR;
+
+DECLARE
+	vfirst_name VARCHAR2(20);
+	vsalary NUMBER;
+	dept_name VARCHAR2(20);
+	dept_avg NUMBER;
+	
+BEGIN
+	empproc02_outmode(201, vfirst_name, vsalary, dept_name, dept_avg);
+
+	DBMS_OUTPUT.PUT_LINE('사원번호 : ' || 201);
+	DBMS_OUTPUT.PUT_LINE('급여 : ' || vsalary);
+	DBMS_OUTPUT.PUT_LINE('부서명 : ' || dept_name);
+	DBMS_OUTPUT.PUT_LINE('부서평균 : ' || dept_avg);
+END;
+/
+SHOW error;
+
+

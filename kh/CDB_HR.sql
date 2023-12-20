@@ -2431,7 +2431,7 @@ where salary > any (select salary from employees where department_id = 110);
 -- EXISTS 연산자는 서브 쿼리문에서 주로 사용하며 서브 쿼리의 결과 값이 참이 나오기만 하면
 -- 바로 메인 쿼리의 결과 값을 리턴
 
--- JOB 변뎡 이력이 있는 모든 사원의 사원번호, FIST_NAME, 현재 JOB_ID, 현재 JOB_TITLE를 출력하시오 (exists
+-- JOB 변경 이력이 있는 모든 사원의 사원번호, FIST_NAME, 현재 JOB_ID, 현재 JOB_TITLE를 출력하시오 (exists
 -- 테이블 확인
 select * from jobs;
 select * from job_history;
@@ -2776,3 +2776,44 @@ BEGIN
 												'/급여 : ' || to_char(vsalary, '$999,999');
 END;
 /
+
+desc locations;
+-- [뷰예제]
+--1. 사원 번호와 사원명과 부서명과 부서의 위치를 출력하는 뷰(VIEW_LOC)
+CREATE OR REPLACE VIEW view_loc 
+AS
+SELECT employee_id, first_name, department_name, location_id
+FROM (SELECT employee_id, first_name, department_name, location_id 
+            FROM employees e INNER JOIN departments d
+            ON e.department_id = d.department_id);
+
+select * from view_loc;
+
+--2. 30번 부서 소속 사원의 이름과 입사일과 부서명을 출력하는 (VIEW_DEPT30) 작성
+
+
+
+-- 4.급여를 많이 받는 순서대로 3명만 출력하는 뷰(VIEW_SAL_TOP3)와 인라인 뷰로 작성
+SELECT rnum, employee_id, first_name, salary, phone_number, hire_date
+FROM (SELECT rownum as rnum, employee_id, first_name, salary, phone_number, hire_date FROM employees
+            ORDER BY salary DESC)
+WHERE rownum <= 5;
+
+CREATE OR REPLACE VIEW view_sal_top3
+AS
+SELECT employee_id, first_name, salary, phone_number
+FROM employees
+ORDER BY salary DESC;
+
+SELECT employee_id, first_name, salary, phone_number
+FROM view_sal_top3
+WHERE ROWNUM <= 5;
+
+
+
+
+
+
+
+
+
