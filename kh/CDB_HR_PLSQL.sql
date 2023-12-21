@@ -396,7 +396,7 @@ END;
 /
 
 
-CREATE OR REPLACE PROCEDURE EMPPOC
+CREATE OR REPLACE PROCEDURE EMPPROC
 IS
 	vword VARCHAR2(1);
 	vemployees employees%ROWTYPE;
@@ -638,3 +638,409 @@ END;
 SHOW error;
 
 
+CREATE OR REPLACE PROCEDURE emp_sal_data
+(vsalary IN employees.salary%TYPE, vemployees OUT SYS_REFCURSOR)
+IS
+BEGIN
+	OPEN vemployees FOR SELECT employee_id, first_name, salary
+	FROM employees WHERE salary > vsalary;
+END;
+/
+SHOW ERROR;
+
+DECLARE
+	pemployees SYS_REFCURSOR;
+	vemployees employees%ROWTYPE;
+BEGIN
+	EMP_SAL_DATA(12000, pemployees);
+	LOOP
+		FETCH pemployees INTO vemployees.employee_id, vemployees.first_name, vemployees.salary;
+		EXIT WHEN pemployees%NOTFOUND;
+		DBMS_OUTPUT.PUT_LINE(vemployees.employee_id ||  ' . ' || vemployees.first_name|| ' ' ||
+		vemployees.salary);
+	END LOOP;
+END;
+/
+
+
+--<예제> 각 부서에서 가장 급여를 많이 받는 사원의 사원번호, 이름, 부서번호, 급여, 입사일을 외부로 전달하는 프로시저(DEPT_SAL_DATA)
+CREATE OR REPLACE PROCEDURE dept_sal_data
+ (vemployees OUT SYS_REFCURSOR)
+IS
+BEGIN
+	OPEN vemployees FOR
+		SELECT employee_id, first_name, salary, hire_date
+		FROM
+			(SELECT row_number() over(partition by department_id order by salary asc) as rnum,
+	        employee_id, first_name, salary, hire_date FROM employees) data
+	  where data.rnum = 1;
+END;
+/
+SHOW ERROR;
+
+DECLARE
+	pemployees SYS_REFCURSOR;
+	vemployees employees%ROWTYPE;
+BEGIN
+  dept_sal_data(pemployees);
+     DBMS_OUTPUT.PUT_LINE('사원번호 / 이름 / 급여 / 입사일 ');
+	LOOP
+		FETCH pemployees
+		INTO vemployees.employee_id, vemployees.first_name, vemployees.salary, vemployees.hire_date;
+		EXIT WHEN pemployees%NOTFOUND;
+		DBMS_OUTPUT.PUT_LINE(vemployees.employee_id || '/ ' || vemployees.first_name
+                                            || '/ '  || vemployees.salary || '/ ' || vemployees.hire_date);
+	END LOOP;
+END;
+/
+
+-- 각 부서에 소속된 사원 한명만 출력. 사원번호, 사원명, 직무번호, 급여, 부서번호 출력
+SELECT employee_id, first_name, job_id, salary, department_id,
+            ROW_NUMBER() OVER(
+            ;
+            
+
+-- 사원 테이블에 로우가 추가되면 자동 수행할 트리거를 생성
+create table emp03(
+    empno number(4) primary key,
+    ename varchar2(20),
+    job varchar2(50)
+);
+CREATE OR REPLACE TRIGGER emp_trg01
+AFTER INSERT
+ON emp03
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('신입사원이 입사했습니다.');
+END;
+/
+
+INSERT INTO emp03(empno, ename, job)
+VALUES(1, '홍길동', '경영지원직9기획/정략)');
+
+
+--사원 테이블에 새로운 데이터 즉 신입사원이 들어오면 급여 테이블에 새로운 데이터를 자동으로 생성하고 싶을 경우,
+-- 사원 테이블에 트리거를 설정하여 구현할 수 있다.
+CREATE TABLE SAL03(
+    salno NUMBER(4),
+    sal NUMBER,
+    empno NUMBER(4),
+    CONSTRAINT SAL03_PK PRIMARY KEY(salno),
+    CONSTRAINT SAL03_FK FOREIGN KEY(empno) REFERENCES emp03(empno)
+);
+
+CREATE SEQUENCE sal03_seq
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 100000
+NOCYCLE
+CACHE 2;
+
+delete from emp03 where empno = 1;
+
+CREATE OR REPLACE TRIGGER emp_trg02
+AFTER INSERT
+ON emp03
+FOR EACH ROW
+BEGIN
+    INSERT INTO sal03(salno, sal, empno)
+    VALUES(sal03_seq.nextval, 2000000, : NEW.empno);
+END;
+/
+INSERT INTO emp03(empno, ename, job) VALUES(2, '이영희', '경영지원직(인사)');
+select * from sal03, emp03;
+
+--사원정보가 제거될 때 그 사원의 급여 정보도 함께 삭제하는 내용을 트리거로 작성한다.
+CREATE OR REPLACE TRIGGER emp_trg03
+AFTER DELETE ON emp03
+FOR EACH ROW
+BEGIN  
+    DELETE FROM sal03 WHERE empno = : OLD.empno;
+END;
+/
+DELETE FROM emp03 WHERE empno = 2;
+
+-- <실습> 입고 트리거 작성
+--입고 테이블에 상품이 입력되면 입고 수량을 상품 테이블의 재고 수량에 추가하는 트리거 작성
+--1. 상품 테이블 생성
+CREATE TABLE PRODUCT(
+    pcode CHAR(6),                              --상품코드
+    pname VARCHAR2(12) NOT NULL,   -- 상품명
+    pcompany VARCHAR(12),                -- 제조사
+    pprice NUMBER(8),                         -- 가격
+    stock NUMBER DEFAULT 0,             -- 재고수량
+        CONSTRAINT PRODUCT_PK PRIMARY KEY(pcode)
+);
+
+--2. 입고 테이블 생성
+CREATE TABLE receiving(
+    rno NUMBER(6),      --입고번호
+    pcode CHAR(6),      -- 상품코드
+    pdate DATE DEFAULT SYSDATE,     -- 입고날짜
+    rqty NUMBER(6),     -- 입고수량
+    rprice NUMBER(8),       -- 입고가격
+    ramount NUMBER(8),      --입고단가
+        CONSTRAINT RECEIVING_PK PRIMARY KEY(rno),
+        CONSTRAINT RECEIVING_FK FOREIGN KEY(pcode) REFERENCES PRODUCT(pcode)
+);
+
+--3. 상품테이블의 재고수량 컬럼을 통해서 실질적인 트리거의 적용 예
+-- 먼저 상품 테이블에 다음과 같은 샘플 데이터를 입력
+INSERT INTO product(pcode, pname, pcompany, pprice)
+VALUES('A00001', '세탁기', 'LG', 1500000);
+INSERT INTO product(pcode, pname, pcompany, pprice)
+VALUES('A00002', '컴퓨터', 'LG', 1000000);
+INSERT INTO product(pcode, pname, pcompany, pprice)
+VALUES('A00003', '냉장고', '삼성', 4500000);
+select * from product;
+
+--4. 입고 테이블에 상품이 입력되면 입고 수량을 상품 테이블의 재고 수량으로 추가하는 트리거 작성
+CREATE OR REPLACE TRIGGER trg_in
+AFTER INSERT ON receiving
+FOR EACH ROW
+BEGIN
+    UPDATE product
+    SET stock = stock + : NEW.rqty
+    WHERE pcode = : NEW.pcode;
+END;
+/
+
+--5. 트리거를 실행시킨 후 입고 테이블에 행을 추가. 입고 테이블에는 물론 상품 테이블의 재고 수량이 변경됨 확인
+INSERT INTO receiving(rno, pcode, rqty, rprice, ramount)
+VALUES(1, 'A00001', 5, 850000, 950000);
+select * from receiving;
+select * from product;
+
+--6. 입고 테이블에 상품이 입력되면 자동으로 상품 테이블의 재고 수량이 증가.
+-- 입고 테이블에 또 다른 상품 입력
+INSERT INTO receiving(rno, pcode, rqty, rprice, ramount)
+VALUES(2, 'A00002', 10, 680000, 780000);
+select * from receiving;
+select * from product;
+
+INSERT INTO receiving(rno, pcode, rqty, rprice, ramount)
+VALUES(3, 'A00003', 10, 250000, 300000);
+select * from receiving;
+select * from product;
+
+--<실습하기> 갱신 트리거 작성
+-- 이미 입고된 상품에 대해서 입고 수량이 변경되면 상품 테이블의 재고수량 역시 변경되어야 한다. 이를 위한 갱신 트리거 작성
+--1.갱싱 트리거 생성
+CREATE OR REPLACE TRIGGER trg_up
+AFTER UPDATE ON receiving
+FOR EACH ROW
+BEGIN
+    UPDATE product
+    SET stock = stock + (- : OLD.rqty + : NEW.rqty)
+    WHERE pcode = : NEW.pcode;
+END;
+/
+
+--2. 입고 번호 3번은 냉장고가 입고된 정보를 기록한 것으로 번호 3번의 입고 수량을 8로 변경하였더니 냉장고의 재고 수량 역시 8로 변경됨.
+UPDATE receiving SET rqty = 8, ramount = 280000 -- 입고 수량과 입고 금액
+WHERE rno = 3;
+select * from receiving;
+select * from product;
+
+--<실습하기>삭제 트리거 작성
+--입고 테이블에서 입고되었던 상황이 삭제되면 상품 테이블에 재고수량에서 삭제된 입고수량 만큼을 빼는 삭제 트리거 작성
+--1. 삭제 트리거 작성
+CREATE OR REPLACE TRIGGER trg_del
+AFTER DELETE ON receiving
+FOR EACH ROW
+BEGIN
+    UPDATE PRODUCT
+    SET stock = stock - : OLD.rqty
+    WHERE pcode = : OLD.pcode;
+END;
+/
+
+--2. 입고 번호 3번은 냉장고가 입고된 정보를 기록한 것으로서 입고 번호가 3번인 행을 삭제하였더니
+-- 냉장고의 재고 수량 역시 0으로 변경되었다.
+DELETE receiving WHERE rno = 3;
+select * from receiving;
+select * from product;
+
+
+--Function
+-- 부서 번호를 매개변수로 부서의 이름을 반환하는 함수를 생성(첫번째 방법)
+CREATE OR REPLACE FUNCTION getdname(vdepartment_id IN departments.department_id%TYPE)
+RETURN VARCHAR2
+IS
+    vdepartment_name departments.department_name%TYPE;
+    vcount NUMBER := 0;
+BEGIN
+    SELECT COUNT(*) INTO vcount FROM departments
+    WHERE department_id = vdepartment_id;
+    
+    IF vcount = 0 THEN
+        vdepartment_name := '해당 부서 없음';
+    ELSE
+        SELECT department_name INTO vdepartment_name FROM departments
+        WHERE department_id = vdepartment_id;
+    END iF;
+    RETURN vdepartment_name;
+END;
+/
+
+-- 함수 사용 방법 : select 문 호출
+SELECT first_name, job_id, NVL(commission_pct, 0) commission_pct, salary, getdname(department_id)
+FROM employees;
+
+SELECT first_name, job_id, NVL(commission_pct, 0) commission_pct, salary, getdname(department_id)
+FROM employees WHERE first_name = 'Lisa';
+
+SELECT getdname(500) FROM dual;
+
+-- 부서 번호를 매개변수로 부서의 이름을 반환하는 함수를 생성(두번째 방법)
+CREATE OR REPLACE FUNCTION getdname(vdepartment_id IN departments.department_id%TYPE)
+RETURN VARCHAR2
+IS
+    vdepartment_name departments.department_name%TYPE;
+BEGIN
+    SELECT department_name INTO vdepartment_name FROM departments
+    WHERE department_id = vdepartment_id;
+    RETURN vdepartment_name;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+            vdepartment_name := '해당 부서 없음';
+RETURN vdepartment_name;
+END;
+/
+
+SELECT employee_id, first_name, TO_CHAR(hire_date, 'YYYY-MM-DD') hiredate,
+           getdname(department_id) department_name
+FROM employees;
+SELECT getdname(400) FROM DUAL;
+
+--<예제>부서번호를 매개변수로 해당 부서의 급여의 합을 반환하는 함수를 생성(GETSUMDEPT)
+CREATE OR REPLACE FUNCTION getsumdept(vdepartment_id employees.department_id%TYPE)
+RETURN NUMBER
+IS
+    vsum_salary VARCHAR2(50);
+BEGIN
+    SELECT NVL2(vdepartment_id, TO_CHAR(SUM(SALARY), '999999'),'해당부서없음') as sum_salary
+    INTO vsum_salary
+    FROM employees
+    WHERE department_id = vdepartment_id;
+    RETURN vsum_salary;
+TO_CHAR(ROUND(SUM(salary)), '99999999'),
+END;
+/
+
+--사원명, 급여, 부서번호, 부서명, 부서의 급여합 출력
+SELECT first_name, salary, department_id, getdname(department_id) department_name,
+            getsumdept(department_id) sumsalary
+FROM employees
+WHERE employee_id = 100;
+
+SELECT first_name, salary, department_id, getdname(department_id) department_name,
+            getsumdept(department_id) sumsalary
+FROM employees
+WHERE employee_id = 178;
+
+SELECT first_name, salary, department_id
+FROM employees
+WHERE employee_id = 178;
+
+desc employees;
+
+-------------------EXCEPTION
+DECLARE
+    vfirst_name employees.first_name%TYPE;
+BEGIN
+    SELECT first_name INTO vfirst_name
+    FROM employees
+    WHERE first_name LIKE 'O%';
+    DBMS_OUTPUT.PUT_LINE('사원명은 ' || vfirst_name || ' 입니다.');
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+              DBMS_OUTPUT.PUT_LINE('해당 사원이 존재하지 않습니다');
+    WHEN TOO_MANY_ROWS THEN
+              DBMS_OUTPUT.PUT_LINE('현재 단어를 포함한 사원이 두명 이상 존재합니다');
+END;
+/
+
+
+CREATE TABLE emp04
+AS
+SELECT employee_id, first_name FROM employees;
+
+CREATE OR REPLACE PROCEDURE noempno_exception
+(vemployee_id emp04.employee_id%TYPE)
+IS
+    exempid EXCEPTION;
+BEGIN
+    DELETE FROM emp04 WHERE employee_id = vemployee_id;
+    IF SQL%NOTFOUND THEN
+        RAISE exempid;
+    ELSE
+        DBMS_OUTPUT.PUT_LINE(CONCAT(vemployee_id, '사원이 삭제되었습니다'));
+    END IF;
+EXCEPTION
+    WHEN exempid THEN
+            DBMS_OUTPUT.PUT_LINE('입력하신 번호는 없는 사원번호입니다');
+END;
+/
+
+EXEC noempno_exception(800);
+EXEC noempno_exception(100);
+    
+    
+    
+------------------------------ PACKAGE
+CREATE OR REPLACE PACKAGE EMPPACK
+IS
+    PROCEDURE EMPPROC;
+    PROCEDURE EMPPROC02 ( vdepartment_id IN employees.department_id%TYPE );
+END EMPPACK;
+/
+
+CREATE OR REPLACE PACKAGE BODY EMPPACK
+IS
+    PROCEDURE EMPPROC
+    IS
+        vword VARCHAR2(1);
+        vemployees employees%ROWTYPE;
+        CURSOR C1 (vword VARCHAR2)
+        IS
+        SELECT employee_id, first_name, salary
+        FROM employees WHERE first_name LIKE '%' || vword ||'%';
+    BEGIN
+        vword := DBMS_RANDOM.STRING('U', 1);
+        DBMS_OUTPUT.PUT_LINE('임의의 문자 : ' || vword);
+        OPEN C1(vword);
+        DBMS_OUTPUT.PUT_LINE('사번 / 사원명 / 급여');
+        DBMS_OUTPUT.PUT_LINE('----------------------------');
+        LOOP
+            FETCH C1 INTO vemployees.employee_id, vemployees.first_name, vemployees.salary;
+            IF C1%ROWCOUNT = 0 THEN
+			DBMS_OUTPUT.PUT_LINE('해당 사원이 존재하지 않습니다.');
+            END IF;
+		EXIT WHEN C1%NOTFOUND;
+		DBMS_OUTPUT.PUT_LINE(vemployees.employee_id || '/' || vemployees.first_name || '/' ||
+		vemployees.salary);
+        END LOOP;
+    END;
+    
+    PROCEDURE EMPPROC02 ( vdepartment_id IN employees.department_id%TYPE )
+    IS
+        CURSOR C1
+    	IS
+        SELECT * FROM employees WHERE department_id = vdepartment_id;
+    BEGIN
+        DBMS_OUTPUT.PUT_LINE('사원번호 / 사원명 / 급여');
+        DBMS_OUTPUT.PUT_LINE('----------------------------');
+        FOR vemployees IN C1 LOOP
+    		DBMS_OUTPUT.PUT_LINE(vemployees.employee_id || ' / '
+													|| vemployees.first_name || ' / ' || vemployees.salary);
+        END LOOP;
+    END;
+END EMPPACK;
+/
+
+
+    
+    
