@@ -668,12 +668,12 @@ CREATE OR REPLACE PROCEDURE dept_sal_data
  (vemployees OUT SYS_REFCURSOR)
 IS
 BEGIN
-	OPEN vemployees FOR
-		SELECT employee_id, first_name, salary, hire_date
-		FROM
+	OPEN vemployees 
+    FOR SELECT employee_id, first_name, salary, hire_date
+           FROM
 			(SELECT row_number() over(partition by department_id order by salary asc) as rnum,
-	        employee_id, first_name, salary, hire_date FROM employees) data
-	  where data.rnum = 1;
+	        employee_id, first_name, salary, hire_date FROM employees WHERE department_id IS NOT NULL) data
+            WHERE data.rnum = 1;
 END;
 /
 SHOW ERROR;
@@ -694,10 +694,66 @@ BEGIN
 END;
 /
 
--- 각 부서에 소속된 사원 한명만 출력. 사원번호, 사원명, 직무번호, 급여, 부서번호 출력
-SELECT employee_id, first_name, job_id, salary, department_id,
-            ROW_NUMBER() OVER(
-            ;
+
+--부서(department_id)별 급여총합, 급여평균, 최고급여, 최저급여
+SELECT department_id, SUM(salary), TRUNC(AVG(salary)), MAX(salary), MIN(salary)
+FROM employees
+GROUP BY department_id
+ORDER BY 1;
+--직무(job_id)별 급여 총합, 급여 평균, 최고급여, 최저급여
+SELECT job_id, SUM(salary), TRUNC(AVG(salary)), MAX(salary), MIN(salary)
+FROM employees
+GROUP BY job_id
+ORDER BY 1;
+
+-- 프로시저(EMP_DEPT_PROC) 실행 시 사용자에게 부서 또는 직무를 나타내는 문자를 입력받아
+-- DEPTID_JOBID 매개변수에 저장
+-- 이때 'deptid'라고 입력하면 부서별 급여 총합 등을
+-- 'jobid'라고 입력하면 직무별 급여 총합 등을
+-- 커서변수에 저장하여 외부로 반환하는 프로시저 작성
+
+CREATE OR REPLACE PROCEDURE emp_dept_proc
+ (deptid_jobid IN employees.job_id%TYPE, 
+  vemployees OUT SYS_REFCURSOR)
+IS
+BEGIN
+	IF deptid_jobid = 'deptid' THEN
+        OPEN vemployees FOR
+            SELECT department_name, SUM(e.salary) AS SUM, TRUNC(AVG(e.salary)) AS AVG, MAX(e.salary) AS MAX, MIN(e.salary) AS MIN
+            FROM employees e INNER JOIN departments d
+            USING(department_id)
+            GROUP BY department_name;
+    ELSE
+        OPEN vemployees FOR
+            SELECT job_title, SUM(salary) AS SUM, TRUNC(AVG(salary)) AS AVG, MAX(salary) AS MAX, MIN(salary) AS MIN
+            FROM employees e INNER JOIN jobs j
+            USING(job_id)
+            GROUP BY job_title;
+    END IF;
+END;
+/
+SHOW ERROR;
+
+DECLARE
+	pemployees SYS_REFCURSOR;
+    input VARCHAR2(10) := 'jobid';
+    v_id VARCHAR2(50);
+    v_sum NUMBER;
+    v_avg NUMBER;
+    v_max NUMBER;
+    v_min NUMBER;
+BEGIN
+     emp_dept_proc(input, pemployees);
+     DBMS_OUTPUT.PUT_LINE('NAME | SUM | AVG | MAX | MIN');
+     LOOP
+        FETCH pemployees INTO v_id, v_sum, v_avg, v_max, v_min;
+        EXIT WHEN pemployees%NOTFOUND;
+            DBMS_OUTPUT.PUT_LINE(v_id || ' | ' || v_sum || ' | ' || v_avg || ' | ' || v_max || ' | ' || v_min);
+    END LOOP;
+END;
+/
+
+
             
 
 -- 사원 테이블에 로우가 추가되면 자동 수행할 트리거를 생성
@@ -1041,6 +1097,3 @@ IS
 END EMPPACK;
 /
 
-
-    
-    

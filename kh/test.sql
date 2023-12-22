@@ -1,6 +1,7 @@
-SELECT first_name, salary, department_id
-FROM employees
-WHERE department_id IN (SELECT DISTINCT department_id 
-												FROM employees 
-												WHERE salary >= 15000)
-ORDER BY department_id;
+SELECT employee_id, first_name, e.job_id, job_title
+FROM employees e INNER JOIN jobs j
+ON e.job_id = j.job_id
+WHERE EXISTS (SELECT *
+							FROM job_history
+							WHERE e.employee_id = employee_id)
+ORDER BY e.employee_id;
