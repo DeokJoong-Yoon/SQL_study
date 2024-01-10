@@ -434,3 +434,18 @@ BEGIN
     END LOOP;
 END;
 /
+
+select no, s_num, s_name, 
+decode((select count(sd_num) from student where s_num = sb.s_num), 0, '삭제가능', '삭제불가능')
+as deletetable from subject sb;
+
+-- 뷰의 장점 : 보안성과 편의성
+create or replace view subjectselect(no, s_num, s_name, deleteable)
+as
+SELECT no, s_num, s_name
+        , decode((select count(sd_num) from student where s_num = sb.s_num), 0, '삭제가능', '삭제불가능')
+FROM subject sb
+order by no;
+
+select * from subjectselect;
+

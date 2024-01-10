@@ -33,3 +33,5 @@ WHERE role = 'RESOURCE';
 select * from dba_role_privs
 where GRANTEE = 'JAVAUSER';
 show user;
+
+grant create view to javauser;
