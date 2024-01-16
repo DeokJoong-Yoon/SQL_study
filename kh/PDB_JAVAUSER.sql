@@ -449,3 +449,63 @@ order by no;
 
 select * from subjectselect;
 
+select * from subject;
+
+-- 회원가입 테이블
+create table t_member (
+    m_id varchar2(15)   not null,
+    m_passwd varchar2(15)   not null,
+    m_name varchar2(18)     not null,
+    m_email varchar2(100)  not null,
+    m_tel   varchar2(15)    not null,
+    reg_date    date    default sysdate,
+    constraint t_member_pk primary key(m_id)
+);
+
+comment on table t_member is '회원 정보';
+comment on column t_member.m_id is '회원 아이디 ';
+comment on column t_member.m_passwd is '회원 비밀번호';
+comment on column t_member.m_name is '회원명 ';
+comment on column t_member.m_email is '회원 이메일';
+comment on column t_member.m_tel is '회원 전화번호';
+comment on column t_member.reg_date is '회원 등록일';
+
+insert into t_member values('id1', 'pw1', '이름1', '1@naver.com', '111-1111-1111', sysdate);
+insert into t_member values('id2', 'pw2', '이름2', '2@naver.com', '222-2222-2222', sysdate);
+insert into t_member values('id3', 'pw3', '이름3', '3@naver.com', '333-3333-3333', sysdate);
+insert into t_member values('id4', 'pw4', '이름4', '4@naver.com', '444-4444-4444', sysdate);
+insert into t_member values('id5', 'pw5', '이름5', '5@naver.com', '555-5555-5555', sysdate);
+insert into t_member values('id6', 'pw6', '이름6', '6@naver.com', '666-6666-6666', sysdate);
+
+create table board(
+    num number(4)            not null,
+    author varchar2(20)       not null,
+    title varchar2(500)         not null,
+    content varchar2(4000)  not null,
+    writeday date default sysdate,
+    readcnt number(4) default 0,
+    reproot number(4),
+    repstep number(4),
+    repindent number(4),
+    passwd varchar2(12)     not null,
+    constraint board_pk primary key(num)
+);
+
+-- 답변 게시판을 위한 컬럼  
+-- reproot, repstep,  repindent 
+
+-- drop table board;
+comment on table  board is '게시판 테이블';
+comment on column board.num is '게시판 번호';
+comment on column board.author is '게시판 작성자';
+comment on column board.title is '게시판 제목';    
+comment on column board.content is '게시판 내용';
+comment on column board.writeday is '게시판 등록일';     
+comment on column board.readcnt is '게시판 조회수';     
+comment on column board.reproot is '게시판 답변글(원래글의 번호 참조 - 그룹번호)';
+comment on column board.repstep is '게시판 답변글(답변글의 위치번호 지정)';
+comment on column board.repindent is '게시판 답변글(답변글의 계층번호 지정)';
+comment on column board.passwd is '게시판 비밀번호';
+
+
+
