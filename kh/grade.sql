@@ -1,22 +1,3 @@
-create table student(
-    num number primary key,
-    student_number number not null,
-    first_name varchar2(4) not null,
-    last_name varchar2(10) not null,
-    korean_score number not null,
-    english_score number not null,
-    math_score number not null
-);
-
-create table manager1(
-    num number primary key,
-    manager_number number not null,
-    first_name varchar2(4) not null,
-    last_name varchar2(10) not null,
-    manager_hire_date char(8) not null
-);
-
-
 
 CREATE TABLE TB_USER(
 
@@ -29,6 +10,8 @@ USER_NAME VARCHAR2(50) NOT NULL,
 USER_AGE NUMBER NOT NULL
 
 );
+
+
 
 CREATE SEQUENCE SEQ_UNO
 
@@ -49,11 +32,13 @@ COMMIT;
 
 select * from TB_USER;
 
+desc tb_user;
+
 CREATE TABLE MEMBER(
 
 USER_NO NUMBER PRIMARY KEY,
 
-USER_ID VARCHAR2(20) NOT NULL,
+USER_ID VARCHAR2(20) NOT NULL unique,
 
 USER_PW VARCHAR2(20) NOT NULL,
 
@@ -65,6 +50,24 @@ REG_DATE DATE DEFAULT SYSDATE
 
 );
 
+drop table MEMBER;
+commit;
+
+
 CREATE SEQUENCE SEQ_MEMBER;
 
+select * from member;
 
+create table product(
+	product_number NUMBER PRIMARY KEY,
+	product_name VARCHAR(21) NOT NULL,
+	product_price NUMBER NOT NULL,
+	product_regist_date CHAR(10) NOT NULL,
+	total_sell_count NUMBER NOT NULL
+);
+
+create table seller(
+	seller_id NUMBER PRIMARY KEY,
+	seller_name VARCHAR2(60) NOT NULL,
+	seller_homepage_url VARCHAR2(60) NOT NULL
+);

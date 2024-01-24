@@ -51,6 +51,49 @@ values ( board_seq.nextval , '홍길동', '노력에 관련된 명언' ,
 board_seq.currval, 0,0, '1234' );
 
 
-insert into board( num, author, title, content, reproot, repstep, repindent, passwd )
-values ( board_seq.nextval , ?, ?, 
-?, board_seq.currval, 0,0, ? )
+-- 전체글 조회
+SELECT num, title, passwd FROM board;
+
+-- 비밀번호 확인 (1 : 비밀번호 일치 / 0 : 비밀번호 불일치)
+SELECT NVL((SELECT 1 FROM board WHERE num = 3 AND passwd = '1234'), 0) as result FROM dual;
+
+--SELECT NVL((SELECT 1 FROM board WHERE num = #{num} AND passwd = #{passwd} ), 0) as result FROM dual
+
+-- 게시판 수정
+
+UPDATE board SET title = '수정확인', content = '수정합니다.', passwd = '4321' WHERE num = 1;
+
+-- UPDATE board SET title = ?, content = ?, passwd = ?  WHERE num = ?;
+
+-- 게시판 삭제
+DELETE FROM board WHERE num = 1;
+-- DELETE FROM board WHERE num = ?;
+
+-- 회원가입 테이블
+create table member(
+	num number,
+	m_id varchar2(12)      not null,
+	m_passwd varchar2(15)  not null,
+	m_name varchar(15)     not null,
+	m_email varchar2(80)   not null,
+	m_tel varchar2(15)     not null,
+	reg_date date default sysdate,
+	constraint member_pk primary key(num),
+	constraint member_uk unique(m_id)
+);
+
+comment on table member is '회원 정보';
+comment on column member.num is '회원 번호';
+comment on column member.m_id is '회원 아이디';
+comment on column member.m_passwd is '회원 비밀번호';
+comment on column member.m_name is '회원명';
+comment on column member.m_email is '회원 이메일';   
+comment on column member.m_tel is '회원 전화번호';   
+comment on column member.reg_date is '회원 등록일'; 
+
+-- 댓글 시퀀스 생성
+create sequence member_seq start with 1
+increment by 1
+nocycle;
+
+select * from member;

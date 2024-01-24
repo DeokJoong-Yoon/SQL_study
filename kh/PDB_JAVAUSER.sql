@@ -507,5 +507,5 @@ comment on column board.repstep is '게시판 답변글(답변글의 위치번호 지정)';
 comment on column board.repindent is '게시판 답변글(답변글의 계층번호 지정)';
 comment on column board.passwd is '게시판 비밀번호';
 
-
+select * from board;
 
