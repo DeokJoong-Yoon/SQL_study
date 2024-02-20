@@ -509,3 +509,279 @@ comment on column board.passwd is '게시판 비밀번호';
 
 select * from board;
 
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DROP TABLE  COMPANY ;
+
+CREATE TABLE  COMPANY  (
+	 cmp_id 	varchar2(20)		NOT NULL,
+	 cmp_name 	varchar2(30)		NOT NULL,
+	 cmp_addr 	varchar2(100)		NULL,
+	 cmp_tel 	varchar2(13)		NOT NULL,
+	 cmp_emp_name 	varchar2(15)		NULL,
+	 cmp_emp_email 	varchar2(40)		NULL
+);
+
+COMMENT ON COLUMN  COMPANY . cmp_id  IS '캠핑카대여회사ID';
+
+COMMENT ON COLUMN  COMPANY . cmp_name  IS '회사명';
+
+COMMENT ON COLUMN  COMPANY . cmp_addr  IS '회사주소';
+
+COMMENT ON COLUMN  COMPANY . cmp_tel  IS '전화번호';
+
+COMMENT ON COLUMN  COMPANY . cmp_emp_name  IS '담당자이름';
+
+COMMENT ON COLUMN  COMPANY . cmp_emp_email  IS '담당자이메일';
+
+DROP TABLE  CAR ;
+
+CREATE TABLE  CAR  (
+	 car_id 	varchar2(20)		NOT NULL,
+	 cmp_id 	varchar2(20)		NOT NULL,
+	 car_name 	varchar2(20)		NOT NULL,
+	 car_num 	varchar2(15)		NOT NULL,
+	 car_member 	number		NULL,
+	 car_img 	varchar2(1000)		NULL,
+	 car_detail 	varchar2(200)		NULL,
+	 car_rent_feel 	number		NOT NULL,
+	 car_reg_date 	date	DEFAULT sysdate	NULL
+);
+
+COMMENT ON COLUMN  CAR . car_id  IS '캠핑카등록ID';
+
+COMMENT ON COLUMN  CAR . cmp_id  IS '캠핑카대여회사ID';
+
+COMMENT ON COLUMN  CAR . car_name  IS '캠핑카이름';
+
+COMMENT ON COLUMN  CAR . car_num  IS '차량번호';
+
+COMMENT ON COLUMN  CAR . car_member  IS '승차인원수';
+
+COMMENT ON COLUMN  CAR . car_img  IS '이미지';
+
+COMMENT ON COLUMN  CAR . car_detail  IS '상세정보';
+
+COMMENT ON COLUMN  CAR . car_rent_feel  IS '대여비용정보';
+
+COMMENT ON COLUMN  CAR . car_reg_date  IS '등록일자';
+
+DROP TABLE  RENTAL ;
+
+CREATE TABLE  RENTAL  (
+	 r_number 	number		NOT NULL,
+	 r_start_date 	date	DEFAULT sysdate	NOT NULL,
+	 r_period 	date		NOT NULL,
+	 r_charge 	number		NOT NULL,
+	 r_payment_period 	number		NOT NULL,
+	 r_etc_list 	varchar2(100)		NULL,
+	 r_etc_charge 	number		NULL,
+	 c_license_number 	number		NOT NULL,
+	 car_id 	varchar2(20)		NOT NULL,
+	 cmp_id 	varchar2(20)		NOT NULL
+);
+
+COMMENT ON COLUMN  RENTAL . r_number  IS '고유대여번호';
+
+COMMENT ON COLUMN  RENTAL . r_start_date  IS '대여시작일';
+
+COMMENT ON COLUMN  RENTAL . r_period  IS '대여기간';
+
+COMMENT ON COLUMN  RENTAL . r_charge  IS '청구요금';
+
+COMMENT ON COLUMN  RENTAL . r_payment_period  IS '납입기한';
+
+COMMENT ON COLUMN  RENTAL . r_etc_list  IS '기타청구내역';
+
+COMMENT ON COLUMN  RENTAL . r_etc_charge  IS '기타청구요금';
+
+COMMENT ON COLUMN  RENTAL . c_license_number  IS '운전면허증번호';
+
+COMMENT ON COLUMN  RENTAL . car_id  IS '캠핑카등록ID';
+
+COMMENT ON COLUMN  RENTAL . cmp_id  IS '캠핑카대여회사ID';
+
+DROP TABLE  CUSTOMER ;
+
+CREATE TABLE  CUSTOMER  (
+	 c_license_number 	number		NOT NULL,
+	 c_name 	varchar2(20)		NOT NULL,
+	 c_address 	varchar2(100)		NULL,
+	 c_tel 	varchar2(20)		NOT NULL,
+	 c_email 	varchar2(40)		NULL,
+	 c_rental_date 	date		NULL,
+	 c_car_model 	varchar2(30)		NULL
+);
+
+COMMENT ON COLUMN  CUSTOMER . c_license_number  IS '운전면허증번호';
+
+COMMENT ON COLUMN  CUSTOMER . c_name  IS '고객명';
+
+COMMENT ON COLUMN  CUSTOMER . c_address  IS '고객주소';
+
+COMMENT ON COLUMN  CUSTOMER . c_tel  IS '고객전화번호';
+
+COMMENT ON COLUMN  CUSTOMER . c_email  IS '고객이메일';
+
+COMMENT ON COLUMN  CUSTOMER . c_rental_date  IS '캠핑카사용날짜';
+
+COMMENT ON COLUMN  CUSTOMER . c_car_model  IS '캠핑카종류';
+
+DROP TABLE  REPAIR_NUMBER ;
+
+CREATE TABLE  REPAIR_NUMBER  (
+	 rn_num 	number(5)		NOT NULL,
+	 rn_history 	varchar2(100)		NOT NULL,
+	 rn_date 	date	DEFAULT sysdate	NOT NULL,
+	 rn_cost 	number		NULL,
+	 rn_pay_date 	varchar2(10)		NOT NULL,
+	 c_license_number 	number		NOT NULL,
+	 rs_id 	number(5)		NOT NULL,
+	 car_id 	varchar2(20)		NOT NULL,
+	 cmp_id 	varchar2(20)		NOT NULL
+);
+
+COMMENT ON COLUMN  REPAIR_NUMBER . rn_num  IS '정비번호';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . rn_history  IS '정비내역';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . rn_date  IS '수리날짜';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . rn_cost  IS '수리비용';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . rn_pay_date  IS '납입기한';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . c_license_number  IS '운전면허증번호';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . rs_id  IS '캠핑카정비소ID';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . car_id  IS '캠핑카등록ID';
+
+COMMENT ON COLUMN  REPAIR_NUMBER . cmp_id  IS '캠핑카대여회사ID';
+
+DROP TABLE  REPAIR_SHOP ;
+
+CREATE TABLE  REPAIR_SHOP  (
+	 rs_id 	number(5)		NOT NULL,
+	 rs_name 	varchar2(20)		NOT NULL,
+	 rs_addr 	varchar2(50)		NOT NULL,
+	 rs_tel 	varchar2(20)		NOT NULL,
+	 rs_m_name 	varchar2(15)		NULL,
+	 rs_m_email 	VARCHAR(255)		NULL
+);
+
+COMMENT ON COLUMN  REPAIR_SHOP . rs_id  IS '캠핑카정비소ID';
+
+COMMENT ON COLUMN  REPAIR_SHOP . rs_name  IS '정비소명';
+
+COMMENT ON COLUMN  REPAIR_SHOP . rs_addr  IS '정비소주소';
+
+COMMENT ON COLUMN  REPAIR_SHOP . rs_tel  IS '정비소전화번호';
+
+COMMENT ON COLUMN  REPAIR_SHOP . rs_m_name  IS '담당자이름';
+
+COMMENT ON COLUMN  REPAIR_SHOP . rs_m_email  IS '담당자이메일';
+
+ALTER TABLE  COMPANY  ADD CONSTRAINT  PK_COMPANY  PRIMARY KEY (
+	 cmp_id 
+);
+
+ALTER TABLE  CAR  ADD CONSTRAINT  PK_CAR  PRIMARY KEY (
+	 car_id ,
+	 cmp_id 
+);
+
+ALTER TABLE  RENTAL  ADD CONSTRAINT  PK_RENTAL  PRIMARY KEY (
+	 r_number 
+);
+
+ALTER TABLE  CUSTOMER  ADD CONSTRAINT  PK_CUSTOMER  PRIMARY KEY (
+	 c_license_number 
+);
+
+ALTER TABLE  REPAIR_NUMBER  ADD CONSTRAINT  PK_REPAIR_NUMBER  PRIMARY KEY (
+	 rn_num 
+);
+
+ALTER TABLE  REPAIR_SHOP  ADD CONSTRAINT  PK_REPAIR_SHOP  PRIMARY KEY (
+	 rs_id 
+);
+
+ALTER TABLE  CAR  ADD CONSTRAINT  FK_COMPANY_TO_CAR_1  FOREIGN KEY (
+	 cmp_id 
+)
+REFERENCES  COMPANY  (
+	 cmp_id 
+);
+
+ALTER TABLE  RENTAL  ADD CONSTRAINT  FK_CUSTOMER_TO_RENTAL_1  FOREIGN KEY (
+	 c_license_number 
+)
+REFERENCES  CUSTOMER  (
+	 c_license_number 
+);
+
+ALTER TABLE  RENTAL  ADD CONSTRAINT  FK_CAR_TO_RENTAL_1  FOREIGN KEY (
+	 car_id,
+     cmp_id
+)
+REFERENCES  CAR  (
+	 car_id,
+     cmp_id
+);
+
+ALTER TABLE  REPAIR_NUMBER  ADD CONSTRAINT  FK_CUSTOMER_TO_REPAIR_NUMBER_1  FOREIGN KEY (
+	 c_license_number 
+)
+REFERENCES  CUSTOMER  (
+	 c_license_number 
+);
+
+ALTER TABLE  REPAIR_NUMBER  ADD CONSTRAINT  FK_REPAIR_SHOP_TO_REPAIR_NUMBER_1  FOREIGN KEY (
+	 rs_id 
+)
+REFERENCES  REPAIR_SHOP  (
+	 rs_id 
+);
+
+ALTER TABLE  REPAIR_NUMBER  ADD CONSTRAINT  FK_CAR_TO_REPAIR_NUMBER_1  FOREIGN KEY (
+	 car_id,
+     cmp_id
+)
+REFERENCES  CAR  (
+	 car_id,
+     cmp_id
+);
+
+
+select * from car;
+
+select * from books;
+
+
+desc books;
+
+select books_seq.nextval from dual;
+
+select * from subject;
+desc subject;
+
+alter table subject add (deletable varchar2(20));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
