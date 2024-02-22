@@ -37,7 +37,7 @@ create sequence spring_board_seq
  nocycle
  cache 2;
  
- -- drop sequence srping_board_seq;
+-- drop sequence spring_board_seq;
  
  
  insert into spring_board(b_num, b_name, b_title, b_content, b_pwd)
@@ -75,7 +75,7 @@ create sequence spring_board_seq
  comment on column spring_admin.a_date is '관리자 등록일';
  
  select * from spring_admin;
- 
+ desc spring_admin;
  -- spring_admin 테이블에 레코드 1을 입력해주세요.
  insert into spring_admin(a_id, a_pwd, a_name, a_phone, a_email)
  values('javaadmin', 'java1234', '윤진', '010-1234-1234', 'ykdj92@naver.com');
@@ -89,18 +89,34 @@ create sequence spring_board_seq
  
  
  
+ select * from spring_board;
  
+ delete from spring_board;
  
  
  
  
  -- 파일 업로드시 서버에 저장한 파일명
  
+ drop table member;
+ 
+ CREATE TABLE MEMBER(
+
+MEMBER_ID VARCHAR2(30) PRIMARY KEY,
+
+MEMBER_PWD VARCHAR2(100) NOT NULL,
+
+MEMBER_NM VARCHAR2(15) NOT NULL,
+
+MEMBER_ENROLL_DT DATE DEFAULT SYSDATE
+
+);
+
+INSERT INTO MEMBER VALUES('user01', 'pass01', '홍길동', DEFAULT);
+
  
  
- 
- 
- 
+ select * from member;
  
  
  
