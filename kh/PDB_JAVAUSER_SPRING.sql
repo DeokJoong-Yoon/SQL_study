@@ -119,9 +119,52 @@ INSERT INTO MEMBER VALUES('user01', 'pass01', '홍길동', DEFAULT);
  select * from member;
  
  
+ create table spring_reply (
+    r_num number not null,
+    b_num number not null,
+    r_name varchar2(15) not null,
+    r_content varchar2(2000) not null,
+    r_pwd varchar2(18) not null,
+    r_date date default sysdate,
+    constraint spring_reply_pk primary key(r_num),
+    constraint spring_reply_fk foreign key(b_num)
+                                        references spring_board(b_num)
+ );
  
+ select * from spring_board;
  
+ -- drop table spring_reply;
  
+comment on table spring_reply is '댓글 정보';
+comment on column spring_reply.r_num is '댓글번호';
+comment on column spring_reply.b_num is '게시판 글번호';
+comment on column spring_reply.r_name is '댓글 작성자';
+comment on column spring_reply.r_content is '댓글 내용';
+comment on column spring_reply.r_pwd is '댓글 비밀번호';
+comment on column spring_reply.r_date is '댓글 등록일';
+
+create sequence spring_reply_seq
+start with 1
+increment by 1
+minvalue 1
+nocycle
+cache 2;
+
+-- drop sequence spring_reply_seq;
+
+ select * from spring_board;
+ insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
+ values(spring_reply_seq.nextval, 1, '맹자', '길은 가까이에 있다.
+ 그러나 사람들은 헛되이 먼 곳을 찾고 있다. 일은 해보면 쉬운 것이다. 시작을 하지 않고 미리 어렵게만 생각하고 있기 때문에 할 수 있는 일들을 놓쳐 버리는 것이다.', '1234');
+ insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
+ values(spring_reply_seq.nextval, 1, '맹자', '너에게서 나온 것은 너에게로 돌아간다.', '1234');
+insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
+ values(spring_reply_seq.nextval, 2, '윤진', '새벽에 눈을 떠 저하늘에 꿈을 그리며 그 꿈을 품에 안고 다시 잠이든다.', '1234');
+insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
+ values(spring_reply_seq.nextval, 2, '석보상절', '아름답다 라는 말은 나 답다 라는 말로 나다운 것이 내 마음에 들다. 즉, 나 다울 때, 아름답다라고 한다. ', '1234'); 
+ 
+ select * from spring_reply where b_num = 2;
+
  
  
  
