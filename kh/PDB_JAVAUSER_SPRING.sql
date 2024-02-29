@@ -165,6 +165,7 @@ insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
  
  select * from spring_reply where b_num = 2;
 
+select * from spring_reply;
  
  
  
