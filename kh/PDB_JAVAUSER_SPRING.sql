@@ -163,9 +163,34 @@ insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
 insert into spring_reply(r_num, b_num, r_name, r_content, r_pwd)
  values(spring_reply_seq.nextval, 2, '석보상절', '아름답다 라는 말은 나 답다 라는 말로 나다운 것이 내 마음에 들다. 즉, 나 다울 때, 아름답다라고 한다. ', '1234'); 
  
- select * from spring_reply where b_num = 2;
+ select * from spring_reply;
 
 select * from spring_reply;
+
+update spring_reply set r_name = '러셀' where r_num = 14;
  
+ 
+ 
+ 		SELECT b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as
+		b_date, readcnt, 
+		(select count(r_num) from spring_reply where b_num = boardList.b_num) as replyCnt
+		FROM spring_board boardList
+		ORDER BY b_num desc;
+
+
+alter table spring_board add(b_thumb varchar2(500));
+
+comment on column spring_board.b_thumb is '게시판 썸네일 이미지 경로 및 파일명';
+        
+alter table spring_board add (b_file varchar2(500));
+
+comment on column spring_board.b_file is '게시판 이미지 겨올 및 파일명';
+        
+
+select * from spring_board;
+        
+desc spring_board;
+        
+        
  
  
