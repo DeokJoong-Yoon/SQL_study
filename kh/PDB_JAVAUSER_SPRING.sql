@@ -187,9 +187,128 @@ alter table spring_board add (b_file varchar2(500));
 comment on column spring_board.b_file is '게시판 이미지 겨올 및 파일명';
         
 
-select * from spring_board;
+
+
+
+------- 페이징 처리를 위한 데이터 입력 처리
+CREATE OR REPLACE PROCEDURE BOARD_PAGING_INSERT
+IS
+BEGIN
+    FOR cnt IN 1 .. 120 LOOP
+        INSERT INTO spring_board(b_num, b_name, b_title, b_content, b_pwd)
+        VALUES(spring_board_seq.nextval,
+        'Cervantes ' || cnt,
+        '순례' || cnt,
+        '감히 이룰 수 없는 꿈을꾸고,
+        감히 이루어질 수 없는 사랑을 하고, 
+        감히 견딜 수 없는 고통을 견디며,
+        감히 용감한 자도 가지 못한 곳을 가며,
+        감히 닿지 못할 저 밤하늘의 별에 이른다는 것.
         
+        이것이 나의 순례이며
+        저 별을 따라가는 것이 나의 길이라오
+        아무리 희망이 없을 지라도,
+        또한 아무리 멀리 있을 지라도......',
+        '1234');
+    END LOOP;
+    COMMIT;
+END;
+/
+SHOW ERROR;
+
+EXECUTE BOARD_PAGING_INSERT;
+
+SELECT COUNT(*) FROM SPRING_BOARD;
+select * from spring_board;
+
+
+-- 0.013초
+select /*+INDEX_DESC(spring_board spring_board_pk */
+        b_num, b_name, b_title, b_date
+from spring_board;
+
+-- 0.013초
+select b_num, b_name, b_title, b_date
+from spring_board;
+
+-- 데이터베이스에 전달된 SQL문은 아래와 같은 과정을 거처서 처리된다.
+-- SQL 파싱 : SQL 구문에 오류가 있는지 SQL을 실행해야 하는 대상가 존재하는지를 검사한다.
+-- SQL 최적화 : SQL이 실행되는데 필요한 비용(COST)을 계산하게 되며 이 계산된 값을 기초로 
+--                     어떤 방식으로 실행하는 것이 가장 좋다는 것을 판단하는 실행계획을 세운다
+-- SQL 실행 : 세워진 실행 계획을 통해서 메모리상에 데이터를 읽거나 물리적인 공간에서 데이터를 로딩하는 등의 작업을 하게 된다.
+    
+-- 인덱스(색인) 
+-- CREATE [UNIQUE] INDEX 인덱스명 ON 테이블명( 컬럼1, 컬럼2.... );
+
+-- 힌트(hint)
+-- 개발자가 데이터베이스에 어떤 방식으로 실행해 줘야 하는지를 명시하기 때문에 강제성을 부여한다.
+-- 구문: /*+로 시작하고 */ 로 종료된다.
+-- INDEX_DESC(테이블명 인덱스명): /*+ INDEX_DESC(spring_board spring_board_pk) */
+
+-- rowid: 데이터베이스 내의 주소에 해당하는데 모든 데이터는 자신만의 주소를 가진다.
+select rowid, board.* from spring_board board order by b_num desc;
+
+select /*+ INDEX_DESC(spring_board spring_board_pk) */
+        b_num, b_name, b_title, b_date
+from spring_board where b_num > 0;
+
+-- rownum : SQL이 실행된 결과에 넘버링해준다.
+select rownum, b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as b_date
+from spring_board;
+
+-- 10개의 레코드 얻기 ( 1 ~ 10 까지 )
+select /*+ INDEX_DESC(spring_board spring_baord_pk) */
+            rownum, b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as b_date
+from spring_board where rownum <= 10;
+
+-- 10개의 레코드 얻기( 11 ~ 20 까지 ) 결과? => 출력 레코드가 존재하지 않는다.
+select /*+ INDEX_DESC(spring_board spring_board_pk) */
+            rownum, b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as b_date
+from spring_board where rownum >10 and rownum <= 20;
+
+
+select /*+ INDEX_DESC(spring_board spring_board_pk) */
+        rownum, b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as b_date
+from spring_board where rownum <= 20;   -- 븐다시 1이 포함되오록 해야 한다.
+
+-- 인라인 뷰를 이용하여 원하는 레코드 얻기
+select
+        rnum, b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as b_date
+from (
+            select /*+ INDEX_DESC(spring_board spring_board_pk) */
+                    rownum as rnum, b_num, b_name, b_title, b_date
+            from spring_board
+            where rownum <= 140 -- 페이지번호 * 한페이지에 보여줄 레코드 수
+        ) boardList
+where rnum >120; -- (페이지번호-1) * 한페이지에 보여줄 레코드수
+
+-- 이 과정을 정리하면 다음과 같은 순서이다.
+-- 필요한 순서로 정렬된 데이터에 rownum을 붙인다.
+-- 처음부터 해당 페이지의 데이터를 rownum<=20과 같은 조건을 이용해서 구한다.
+-- 구해놓은 데이터를 하나의 테이블처럼 간주하고 인라인뷰로 처리한다.
+-- 인라인뷰에서 필요한 데이터만을 남긴다.
+
+
+
+select
+        rnum, b_num, b_name, b_title, to_char(b_date, 'YYYY-MM-DD') as b_date
+from (
+            select /*+ INDEX_DESC(spring_board spring_board_pk) */
+                    rownum as rnum, b_num, b_name, b_title, b_date
+            from 
+            (select * from spring_board order by B_DATE desc) sortedBoardList
+            where rownum <= 140 -- 페이지번호 * 한페이지에 보여줄 레코드 수
+        ) boardList
+where rnum >120; -- (페이지번호-1) * 한페이지에 보여줄 레코드수
+
+
 desc spring_board;
+select * from spring_board order by B_DATE desc;
+
+
+
+
+
         
         
  

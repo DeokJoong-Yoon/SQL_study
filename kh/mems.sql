@@ -30,24 +30,23 @@ SELECT 'DROP TABLE "' || TABLE_NAME || '" CASCADE CONSTRAINTS;' FROM user_tables
 
 
 select * from tb_payment;
-
 -- 전체 테이블 생성
 --======================================================================================================================================================
 --결제 테이블
 CREATE TABLE tb_payment (
-	payment_id	 varchar2(10)		NOT NULL PRIMARY KEY,
+	payment_id	 varchar2(10)		NOT NULL,
 	pg 	varchar2(30)		NOT NULL,
 	pay_method	varchar2(200)		NOT NULL,
 	merchant_uid	varchar2(50)		NOT NULL,
 	name 	varchar2(100)		NOT NULL,
-	amount	number(10)		NOT NULL,
+	amount	varchar2(10)		NOT NULL,
 	academy_id	 varchar2(12)		NOT NULL,
 	academy_number 	char(10)		NOT NULL,
 	academy_name	varchar2(100)		NOT NULL,
 	academy_manager_name	varchar2(20)		NOT NULL,
 	academy_manager_email	varchar2(50)		NOT NULL,
 	academy_manager_phone	char(11)		NOT NULL,
-	payment_status	varchar2(10)	DEFAULT '0'	NOT NULL,
+	payment_status	char(1)	DEFAULT '0'	NOT NULL,
 	payment_date	varchar2(20)		NOT NULL
 );
 
@@ -306,8 +305,14 @@ CREATE TABLE tb_common_board (
    common_edit   date   DEFAULT sysdate   NULL,
    common_readcnt   number(7)   DEFAULT 0   NOT NULL,
    common_block_confirm   char(1)   DEFAULT 'N'   NOT NULL,
-   common_block_date   date   DEFAULT sysdate   NULL
+   common_block_date   date   DEFAULT sysdate   NULL,
+   common_thumb varchar2(500) null,
+   common_file varchar2(500) null
 );
+
+
+comment on column tb_common_board.common_thumb is '게시판 썸네일 이미지 경로 및 파일명';
+comment on column tb_common_board.common_file is '게시판 이미지 경로 및 파일명';
 COMMENT ON COLUMN tb_common_board.common_no IS '게시글번호';
 COMMENT ON COLUMN tb_common_board.personal_id IS '개인회원ID';
 COMMENT ON COLUMN tb_common_board.academy_id IS '학원회원ID';
@@ -335,7 +340,8 @@ CREATE TABLE tb_matching_board (
    matching_fee varchar2(40),
    matching_keyword1 varchar2(40),
    matching_keyword2 varchar2(40),
-   matching_keyword3 varchar2(40)
+   matching_keyword3 varchar2(40),
+   matching_comment varchar2(1000)
 );
 COMMENT ON COLUMN tb_matching_board.matching_no IS '게시글번호';
 COMMENT ON COLUMN tb_matching_board.personal_id IS '개인회원id';
@@ -375,6 +381,9 @@ ALTER TABLE tb_payment ADD CONSTRAINT PK_TB_PAYMENT PRIMARY KEY (
 ALTER TABLE tb_like ADD CONSTRAINT PK_TB_LIKE PRIMARY KEY (
    like_member_id,
    common_no
+);
+ALTER TABLE tb_payment ADD CONSTRAINT PK_TB_PAYMENT PRIMARY KEY (
+	payment_id
 );
 ALTER TABLE tb_file ADD CONSTRAINT PK_TB_FILE PRIMARY KEY (
    file_no,
@@ -550,5 +559,4 @@ cache 2;
 
 
 commit;
-
-select * from tb_payment;
+select * from tb_admin;
