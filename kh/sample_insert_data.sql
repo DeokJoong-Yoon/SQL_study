@@ -10,9 +10,9 @@ insert into tb_matching_board
 values (matching_board_seq.nextval, 'hyunwoo762', 'Y', '1234', sysdate, NULL, '서asdfas구', '신사동', '고등', '미술', '무관', '입시대비', '꼼꼼한 관리', '');
 
 select * from tb_personal;
-
+select * from tb_academy;
 select * from tb_matching_board;
-
+select * from tb_payment;
 desc tb_matching_board
 SELECT constraint_name, constraint_type
 FROM user_constraints
